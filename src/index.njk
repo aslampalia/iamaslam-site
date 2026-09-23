@@ -1,0 +1,245 @@
+{% set toTop = "#top" %}
+{% extends "base.njk" %}
+
+{% block head %}
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Aslam — Personal Digital Space</title>
+  <meta name="description" content="Aslam's personal digital space — notes on technology, AI, electronics and markets. I work with Tesla's Autopilot team.">
+  <link rel="canonical" href="https://iamaslam.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Aslam">
+  <meta property="og:title" content="Aslam — Personal Digital Space">
+  <meta property="og:description" content="Notes on technology, AI, electronics and markets. I work with Tesla's Autopilot team.">
+  <meta property="og:url" content="https://iamaslam.com/">
+  <meta property="og:image" content="https://iamaslam.com/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Aslam — Personal Digital Space">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://iamaslam.com/assets/og-image.png">
+  <meta name="twitter:title" content="Aslam — Personal Digital Space">
+  <meta name="twitter:description" content="Notes on technology, AI, electronics and markets.">
+  <meta name="theme-color" content="#FFFCF7">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="alternate" type="application/rss+xml" title="Aslam — Writing" href="feed.xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter+Tight:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@300..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Aslam",
+    "url": "https://iamaslam.com/",
+    "jobTitle": "Autopilot team, Tesla",
+    "knowsAbout": ["Artificial Intelligence", "Electronics", "Battery Management Systems", "Financial Markets"]
+  }
+  </script>
+</head>
+{% endblock %}
+
+{% block content %}
+<main id="main">
+    <!-- ===== Hero ===== -->
+    <section class="hero" id="top" aria-label="Introduction">
+      <div class="sticker sticker-circle" aria-hidden="true"></div>
+      <div class="sticker sticker-square" aria-hidden="true"></div>
+      <div class="container hero-inner">
+        <p class="hero-pill reveal"><span class="pdot" aria-hidden="true"></span>Personal digital space</p>
+        <h1 class="hero-title reveal">A<span class="mark">SLAM</span><span class="dot">.</span></h1>
+        <p class="hero-sub reveal">I work with <strong>Tesla&rsquo;s Autopilot team</strong>, and spend my time learning how the modern world actually works.</p>
+        <div class="hero-ctas reveal">
+          <a class="btn btn-primary" href="#writing">Read the essays <span aria-hidden="true">↓</span></a>
+          <a class="btn btn-ghost" href="#contact">Say hello <span aria-hidden="true">↗</span></a>
+        </div>
+        <p class="topics-label reveal">Fields of interest — tap a sticker</p>
+        <div class="topics reveal" role="list" aria-label="Fields of interest">
+          <button class="chip chip-flame" role="listitem" data-title="Technology" data-desc="The systems underneath modern life — software, hardware, and infrastructure."><span class="cdot" aria-hidden="true"></span>Technology</button>
+          <button class="chip chip-cobalt" role="listitem" data-title="AI" data-desc="Machine intelligence — how it works, and what it means for how we think and work."><span class="cdot" aria-hidden="true"></span>AI</button>
+          <button class="chip chip-teal" role="listitem" data-title="Electronics" data-desc="Circuits, microcontrollers, and the quiet joy of building things that blink."><span class="cdot" aria-hidden="true"></span>Electronics</button>
+          <button class="chip chip-violet" role="listitem" data-title="Markets" data-desc="Price, incentives, and the economics of whatever comes next."><span class="cdot" aria-hidden="true"></span>Markets</button>
+        </div>
+        <p class="topic-note reveal" id="topic-note" aria-live="polite">Four fields, one curiosity. Tap a sticker to see what each one means here.</p>
+      </div>
+    </section>
+
+    <!-- ===== Marquee ===== -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <span>Artificial Intelligence</span><span>Electronics</span><span>Financial Markets</span><span>Building Things</span><span>Autonomous Systems</span><span>Battery Technology</span>
+        <span>Artificial Intelligence</span><span>Electronics</span><span>Financial Markets</span><span>Building Things</span><span>Autonomous Systems</span><span>Battery Technology</span>
+      </div>
+    </div>
+
+    <!-- ===== Now ===== -->
+    <section class="section sec-band" id="now" aria-labelledby="now-title">
+      <div class="container">
+        <div class="sec-head reveal">
+          <p class="eyebrow" style="--dot: var(--flame)">01 — Now</p>
+          <h2 class="sec-title" id="now-title">What I&rsquo;m <span class="mark">exploring</span></h2>
+          <p class="sec-sub">A living list. It changes as my curiosity does — last updated September 2026.</p>
+        </div>
+        <div class="now-grid">
+          <article class="now-card reveal" style="--ac: var(--flame); --ac-soft: var(--flame-soft)">
+            <div class="now-card-top"><span class="now-num">01</span><span class="now-dot" aria-hidden="true"></span></div>
+            <h3 class="now-name">Autonomous Systems</h3>
+            <p class="now-desc">How machines perceive, decide, and move through the world.</p>
+            <span class="now-tag">Active</span>
+          </article>
+          <article class="now-card reveal" style="--ac: var(--teal); --ac-soft: var(--teal-soft)">
+            <div class="now-card-top"><span class="now-num">02</span><span class="now-dot" aria-hidden="true"></span></div>
+            <h3 class="now-name">Battery Management Systems</h3>
+            <p class="now-desc">How energy is stored, balanced, and kept safe.</p>
+            <span class="now-tag">Studying</span>
+          </article>
+          <article class="now-card reveal" style="--ac: var(--cobalt); --ac-soft: var(--cobalt-soft)">
+            <div class="now-card-top"><span class="now-num">03</span><span class="now-dot" aria-hidden="true"></span></div>
+            <h3 class="now-name">Artificial Intelligence</h3>
+            <p class="now-desc">Following the frontier — models, agents, and what&rsquo;s actually new.</p>
+            <span class="now-tag">Active</span>
+          </article>
+          <article class="now-card reveal" style="--ac: var(--magenta); --ac-soft: var(--magenta-soft)">
+            <div class="now-card-top"><span class="now-num">04</span><span class="now-dot" aria-hidden="true"></span></div>
+            <h3 class="now-name">Electronics</h3>
+            <p class="now-desc">Microcontrollers, circuits, and learning by building.</p>
+            <span class="now-tag">Building</span>
+          </article>
+          <article class="now-card reveal" style="--ac: var(--violet); --ac-soft: var(--violet-soft)">
+            <div class="now-card-top"><span class="now-num">05</span><span class="now-dot" aria-hidden="true"></span></div>
+            <h3 class="now-name">Financial Markets</h3>
+            <p class="now-desc">Six years of investing — still watching price discover truth.</p>
+            <span class="now-tag">Active</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Writing ===== -->
+    <section class="section sec-band" id="writing" aria-labelledby="writing-title" style="background: var(--paper-2)">
+      <div class="container">
+        <div class="sec-head reveal">
+          <p class="eyebrow" style="--dot: var(--cobalt)">02 — Writing</p>
+          <h2 class="sec-title" id="writing-title">Notes &amp; <span class="mark">essays</span></h2>
+          <p class="sec-sub">Long-form thinking on AI and economics. Written by a human, read by whoever&rsquo;s curious.</p>
+        </div>
+        <div class="writing-list">
+{% for essay in collections.essays | reverse %}
+          <a class="article-card reveal" href="{{ essay.page.fileSlug }}/">
+            <span>
+              <span class="article-meta">
+                <span class="meta-pill cat">{{ essay.data.cat }}</span>
+                <span class="meta-pill">{{ essay.data.date | shortDate }}</span>
+                <span class="meta-pill">{{ essay.templateContent | readTime }}</span>
+              </span>
+              <h3 class="article-title">{{ essay.data.title }}</h3>
+              <p class="article-desc">{{ essay.data.desc }}</p>
+            </span>
+            <span class="article-arrow" aria-hidden="true">→</span>
+          </a>
+{% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Experiments ===== -->
+    <section class="section sec-band" id="experiments" aria-labelledby="exp-title">
+      <div class="container">
+        <div class="sec-head reveal">
+          <p class="eyebrow" style="--dot: var(--magenta)">03 — Experiments</p>
+          <h2 class="sec-title" id="exp-title">Things I&rsquo;m <span class="mark">building</span></h2>
+          <p class="sec-sub">Small builds and honest notes — not a portfolio of claims. If it isn&rsquo;t here, it isn&rsquo;t finished (or isn&rsquo;t worth showing yet).</p>
+        </div>
+        <div class="exp-grid">
+          <article class="exp-card reveal" style="--ac: var(--teal)">
+            <div class="exp-strip" aria-hidden="true"></div>
+            <div class="exp-body">
+              <div class="exp-top"><span class="exp-num">E.01</span><span class="exp-status">Ongoing</span></div>
+              <h3 class="exp-name">Microcontroller Prototypes</h3>
+              <div class="exp-tags"><span class="exp-tag">Hardware</span><span class="exp-tag">Electronics</span></div>
+              <p class="exp-desc">Hands-on builds — circuits and code, learning electronics by making things work.</p>
+            </div>
+          </article>
+          <article class="exp-card reveal" style="--ac: var(--flame)">
+            <div class="exp-strip" aria-hidden="true"></div>
+            <div class="exp-body">
+              <div class="exp-top"><span class="exp-num">E.02</span><span class="exp-status">Live</span></div>
+              <h3 class="exp-name">iamaslam.com</h3>
+              <div class="exp-tags"><span class="exp-tag">Software</span><span class="exp-tag">Web</span></div>
+              <p class="exp-desc">This site. Hand-built with plain HTML, CSS and JavaScript — no frameworks, no tracking.</p>
+            </div>
+          </article>
+          <article class="exp-card tbd reveal" style="--ac: var(--ink-45)">
+            <div class="exp-body">
+              <div class="exp-top"><span class="exp-num">E.03</span><span class="exp-status idle">Soon</span></div>
+              <h3 class="exp-name">Next experiment</h3>
+              <div class="exp-tags"><span class="exp-tag">TBD</span></div>
+              <p class="exp-desc">Something is always on the bench. Check back — or ask me what I&rsquo;m working on.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== About ===== -->
+    <section class="section sec-band" id="about" aria-labelledby="about-title" style="background: var(--paper-2)">
+      <div class="container">
+        <div class="sec-head reveal">
+          <p class="eyebrow" style="--dot: var(--sun)">04 — About</p>
+          <h2 class="sec-title" id="about-title">The short <span class="mark">version</span></h2>
+        </div>
+        <p class="about-statement reveal">I work with <strong>Tesla&rsquo;s Autopilot team</strong>, and I&rsquo;m fascinated by the systems underneath modern life — the machines that drive themselves, the batteries that power them, and the intelligence increasingly woven through both.</p>
+        <div class="journey reveal" aria-label="Journey">
+          <div class="journey-step">
+            <span class="js-num">Step 01</span>
+            <h3>Business</h3>
+            <p>Started in business and commerce — learned how markets move and why incentives matter.</p>
+          </div>
+          <div class="journey-step">
+            <span class="js-num">Step 02</span>
+            <h3>Technology</h3>
+            <p>Moved from using technology to needing to understand it. Taught myself along the way.</p>
+          </div>
+          <div class="journey-step">
+            <span class="js-num">Step 03</span>
+            <h3>Autonomous Systems</h3>
+            <p>Now working with Tesla&rsquo;s Autopilot team — machines that perceive and decide.</p>
+          </div>
+          <div class="journey-step">
+            <span class="js-num">Step 04</span>
+            <h3>Electronics</h3>
+            <p>Prototyping with microcontrollers. There&rsquo;s no faster teacher than a circuit that won&rsquo;t blink.</p>
+          </div>
+          <div class="journey-step">
+            <span class="js-num">Step 05</span>
+            <h3>Battery Systems</h3>
+            <p>Studying battery management — because the future runs on stored energy.</p>
+          </div>
+          <div class="journey-step">
+            <span class="js-num">Step 06</span>
+            <h3>Artificial Intelligence</h3>
+            <p>Writing and thinking about where intelligence is going — and what it costs.</p>
+          </div>
+        </div>
+        <div class="facts reveal">
+          <div class="fact"><span class="flabel">Education</span><p>Master&rsquo;s in Economics &amp; Commerce</p></div>
+          <div class="fact"><span class="flabel">Markets</span><p>Investing for 6 years</p></div>
+          <div class="fact"><span class="flabel">Currently</span><p>Battery Management Systems certification</p></div>
+        </div>
+        <p class="about-close reveal">My background is unconventional — I came to technology through business and went deeper from there. This site is where I keep notes on what I&rsquo;m learning, building, and thinking about.</p>
+      </div>
+    </section>
+
+    <!-- ===== Contact ===== -->
+    <section class="contact-band" id="contact" aria-labelledby="contact-title">
+      <div class="container contact-inner">
+        <p class="eyebrow reveal" style="--dot: var(--lime)">05 — Contact</p>
+        <h2 class="contact-title reveal" id="contact-title">Have something <span class="mark">interesting</span>?<br>Say hello.</h2>
+        <a class="contact-mail reveal" href="mailto:hello@iamaslam.com">hello@iamaslam.com <span aria-hidden="true">↗</span></a>
+        <p class="contact-note reveal">I read everything. I reply to most things.</p>
+      </div>
+    </section>
+  </main>
+{% endblock %}

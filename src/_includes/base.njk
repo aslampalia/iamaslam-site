@@ -1,0 +1,49 @@
+{# Shared skeleton. Essay pages set `root` to "../" before extending. #}
+<!doctype html>
+<html lang="en">
+{% block head %}{% endblock %}
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  {% block progress %}{% endblock %}
+
+  <div class="navwrap">
+    <header class="navbar">
+      <a class="wordmark" href="{{ root }}#top" aria-label="Aslam — home">ASLAM<span class="dot">.</span></a>
+      <nav class="nav-links" aria-label="Primary">
+        <a class="nav-link" href="{{ root }}#now">Now</a>
+        <a class="nav-link" href="{{ root }}#writing">Writing</a>
+        <a class="nav-link" href="{{ root }}#experiments">Experiments</a>
+        <a class="nav-link" href="{{ root }}#about">About</a>
+      </nav>
+      <a class="btn btn-primary btn-sm" href="{{ root }}#contact">Say hello</a>
+      <button class="menu-btn" id="menu-open" aria-expanded="false" aria-controls="menu-overlay" aria-label="Open menu">☰</button>
+    </header>
+  </div>
+
+  <div class="menu-overlay" id="menu-overlay" role="dialog" aria-label="Menu" aria-hidden="true">
+    <button class="menu-close" id="menu-close" aria-label="Close menu">✕</button>
+    <nav aria-label="Mobile">
+      <a class="menu-link" href="{{ root }}#now"><span class="idx">01</span>Now</a>
+      <a class="menu-link" href="{{ root }}#writing"><span class="idx">02</span>Writing</a>
+      <a class="menu-link" href="{{ root }}#experiments"><span class="idx">03</span>Experiments</a>
+      <a class="menu-link" href="{{ root }}#about"><span class="idx">04</span>About</a>
+      <a class="menu-link" href="{{ root }}#contact"><span class="idx">05</span>Contact</a>
+    </nav>
+  </div>
+
+  {% block content %}{% endblock %}
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span class="fbrand">ASLAM<span style="color: var(--flame)">.</span></span>
+      <span>© <span id="year">2026</span> Aslam. All rights reserved.</span>
+      <span class="spacer"></span>
+      <span>Built by hand — HTML, CSS &amp; JS. No frameworks, no tracking.</span>
+      <a class="to-top" href="{{ toTop }}">Back to top ↑</a>
+    </div>
+  </footer>
+
+  <script src="{{ root }}js/main.js" defer></script>
+</body>
+</html>

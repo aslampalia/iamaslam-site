@@ -1,0 +1,90 @@
+{% set root = "../" %}
+{% set toTop = "#main" %}
+{% extends "base.njk" %}
+
+{% block head %}
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{{ title }} — Aslam</title>
+  <meta name="description" content="{{ desc }}">
+  <link rel="canonical" href="https://iamaslam.com{{ page.url }}">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Aslam">
+  <meta property="og:title" content="{{ title }}">
+  <meta property="og:description" content="{{ desc }}">
+  <meta property="og:url" content="https://iamaslam.com{{ page.url }}">
+  <meta property="article:published_time" content="{{ date | isoDate }}">
+  <meta property="og:image" content="https://iamaslam.com/assets/{{ image | default('og-image.png') }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="{{ short | default(title) }} — Aslam">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://iamaslam.com/assets/{{ image | default('og-image.png') }}">
+  <meta name="twitter:title" content="{{ title }}">
+  <meta name="twitter:description" content="{{ desc }}">
+  <meta name="theme-color" content="#FFFCF7">
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="alternate" type="application/rss+xml" title="Aslam — Writing" href="../feed.xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter+Tight:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@300..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": {{ title | json | safe }},
+    "description": {{ desc | json | safe }},
+    "datePublished": "{{ date | isoDate }}",
+    "author": { "@type": "Person", "name": "Aslam", "url": "https://iamaslam.com/" },
+    "mainEntityOfPage": "https://iamaslam.com{{ page.url }}"
+  }
+  </script>
+</head>
+{% endblock %}
+
+{% block progress %}
+  <div class="progress" aria-hidden="true"><span></span></div>
+{% endblock %}
+
+{% block content %}
+  <main id="main">
+    <article>
+      <div class="container">
+        <header class="essay-head">
+          <a class="back-link" href="../#writing">← All writing</a>
+          <div class="essay-kicker">
+            <span class="meta-pill cat" style="background: {{ catSoft[cat] }}">{{ cat }}</span>
+            <span class="meta-pill">{{ content | readTime }}</span>
+          </div>
+          <h1 class="essay-title">{{ title }}</h1>
+          <div class="essay-meta">
+            <time datetime="{{ date | isoDate }}">{{ date | humanDate }}</time>
+            <span aria-hidden="true">·</span><span>By Aslam</span>
+          </div>
+        </header>
+        <div class="prose">
+{{ content | replace("&quot;", '"') | safe }}
+        </div>
+{% set nav = collections.essays | neighbors(page.url) %}
+{% if nav.newer or nav.older %}
+        <nav class="essay-nav" aria-label="More writing">
+{% if nav.newer %}
+      <a href="../{{ nav.newer.page.fileSlug }}/">
+        <span class="en-label">← Newer</span>
+        <span class="en-title">{{ nav.newer.data.title }}</span>
+      </a>
+{% endif %}
+{% if nav.older %}
+      <a href="../{{ nav.older.page.fileSlug }}/">
+        <span class="en-label">Older →</span>
+        <span class="en-title">{{ nav.older.data.title }}</span>
+      </a>
+{% endif %}
+        </nav>
+{% endif %}
+      </div>
+    </article>
+  </main>
+{% endblock %}

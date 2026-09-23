@@ -1,0 +1,51 @@
+backend:
+  name: git-gateway
+  branch: main
+
+# Shown to visitors of /admin — the site itself is untouched
+site_url: https://iamaslam.com
+display_url: https://iamaslam.com
+logo_url: https://iamaslam.com/assets/favicon.svg
+
+media_folder: "src/assets"
+public_folder: "/assets"
+
+collections:
+  - name: "essays"
+    label: "Essays"
+    label_singular: "Essay"
+    folder: "src/essays"
+    create: true
+    slug: "{{slug}}"
+    summary: "{{title}}"
+    sortable_fields: ["date", "title"]
+    fields:
+      - label: "Title"
+        name: "title"
+        widget: "string"
+        hint: "The essay headline, shown big at the top of the page."
+      - label: "Category"
+        name: "cat"
+        widget: "select"
+        options:
+          - "Artificial Intelligence"
+          - "Economics"
+          - "Technology"
+          - "Electronics"
+          - "Markets"
+        hint: "The colored tag shown next to the title."
+      - label: "Publish date"
+        name: "date"
+        widget: "datetime"
+        format: "YYYY-MM-DD"
+        date_format: "YYYY-MM-DD"
+        time_format: false
+        hint: "Essays are listed newest-first automatically."
+      - label: "Short description"
+        name: "desc"
+        widget: "text"
+        hint: "One or two sentences shown on the homepage under the title."
+      - label: "Body"
+        name: "body"
+        widget: "markdown"
+        hint: "Write normally. Use the toolbar for headings, bold, quotes and lists. The site designs it for you."

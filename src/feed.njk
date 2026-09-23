@@ -1,0 +1,21 @@
+---
+permalink: /feed.xml
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Aslam — Writing</title>
+    <link>https://iamaslam.com/</link>
+    <description>Notes and essays on technology, AI, electronics and markets.</description>
+    <language>en</language>
+{% for essay in collections.essays | reverse %}
+    <item>
+      <title>{{ essay.data.title }}</title>
+      <link>https://iamaslam.com{{ essay.page.url }}</link>
+      <guid>https://iamaslam.com{{ essay.page.url }}</guid>
+      <pubDate>{{ essay.data.date | pubDate }}</pubDate>
+      <description>{{ essay.data.desc }}</description>
+    </item>
+{% endfor %}
+  </channel>
+</rss>
