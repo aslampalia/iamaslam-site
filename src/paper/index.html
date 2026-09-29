@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Paper Trader — play the options game with virtual money</title>
+<meta name="description" content="Free paper options trading. $50,000 in virtual money. No risk, all fun.">
+<!-- API base. Same-origin deploy: "/paper-api". iamaslam.com embed: set to the full API origin, e.g. "https://129-146-179-218.sslip.io/paper-api" -->
+<meta name="paper-api" content="https://129-146-179-218.sslip.io/paper-api">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter+Tight:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@300..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="logo" href="#/dashboard"><span class="die">🎲</span> PAPER TRADER</a>
+    <nav class="nav-links" id="nav-links" aria-label="Primary">
+      <a href="#/dashboard" data-route="dashboard">Dashboard</a>
+      <a href="#/trade" data-route="trade">Trade</a>
+      <a href="#/history" data-route="history">History</a>
+      <a href="#/leaderboard" data-route="leaderboard">Leaderboard</a>
+    </nav>
+    <span class="topbar-spacer"></span>
+    <span class="user-chip" id="user-chip" hidden></span>
+    <button class="logout-btn" id="logout-btn" hidden>Log out</button>
+  </div>
+</header>
+
+<div class="tabbar" id="tabbar">
+  <nav aria-label="Mobile">
+    <a href="#/dashboard" data-route="dashboard"><span class="ico">📊</span>Dash</a>
+    <a href="#/trade" data-route="trade"><span class="ico">⚡</span>Trade</a>
+    <a href="#/history" data-route="history"><span class="ico">🧾</span>History</a>
+    <a href="#/leaderboard" data-route="leaderboard"><span class="ico">🏆</span>Board</a>
+  </nav>
+</div>
+
+<main>
+  <div class="wrap" id="app" aria-live="polite"></div>
+</main>
+
+<footer>
+  <div class="wrap foot-inner">
+    <div>
+      <div class="foot-brand">🎲 Paper Trader</div>
+      <div class="mono" style="font-size:0.75rem;color:var(--ink-70)">a playground on iamaslam.com</div>
+    </div>
+    <div class="disclaimer">
+      ⚠️ <strong>Paper trading only.</strong> All money here is virtual — not investment advice,
+      not a brokerage, not real trades. Option quotes are delayed ~15 minutes. Have fun, learn lots, risk nothing.
+    </div>
+  </div>
+</footer>
+
+<!-- Trade ticket modal -->
+<div class="modal-veil" id="modal-veil" role="dialog" aria-modal="true" aria-label="Trade ticket">
+  <div class="modal" id="modal-box"></div>
+</div>
+
+<div class="toast-zone" id="toast-zone" aria-live="assertive"></div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<script src="app.js"></script>
+</body>
+</html>
