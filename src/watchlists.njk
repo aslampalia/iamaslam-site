@@ -45,7 +45,11 @@
 {% if wl.data.desc %}
           <p class="wl-desc">{{ wl.data.desc }}</p>
 {% endif %}
-{% if wl.data.tickers and wl.data.tickers.length %}
+{% if wl.data.auto %}
+          <ul class="wl-list" id="brief-live-list"></ul>
+          <p class="wl-empty" id="brief-live-empty">Nothing here yet.</p>
+          <p class="wl-count" id="brief-live-count"></p>
+{% elif wl.data.tickers and wl.data.tickers.length %}
           <ul class="wl-list">
 {% for t in wl.data.tickers %}
             <li class="wl-item">
@@ -67,7 +71,45 @@
 {% endfor %}
       </div>
 
-      <p class="wl-foot">Lists are edited from the site admin. The Market Brief list is managed by the morning scan — tickers are added when they trigger, never removed automatically.</p>
+      <p class="wl-foot">Lists are edited from the site admin. The Market Brief list updates live from the morning scan — tickers are added when they trigger, never removed automatically.</p>
+
+      <script>
+      (function () {
+        var list = document.getElementById('brief-live-list');
+        var empty = document.getElementById('brief-live-empty');
+        var count = document.getElementById('brief-live-count');
+        if (!list) return;
+        fetch('https://129-146-179-218.sslip.io/brief-watchlist.json')
+          .then(function (r) { if (!r.ok) throw new Error('bad status'); return r.json(); })
+          .then(function (d) {
+            var t = (d && d.tickers) || [];
+            if (!t.length) return;
+            empty.style.display = 'none';
+            t.forEach(function (x) {
+              var sym = String(x.symbol || '').toUpperCase();
+              if (!sym) return;
+              var li = document.createElement('li');
+              li.className = 'wl-item';
+              var a = document.createElement('a');
+              a.className = 'wl-ticker';
+              a.href = 'https://finance.yahoo.com/quote/' + encodeURIComponent(sym);
+              a.target = '_blank';
+              a.rel = 'noopener';
+              a.textContent = '$' + sym;
+              li.appendChild(a);
+              if (x.note) {
+                var sp = document.createElement('span');
+                sp.className = 'wl-note';
+                sp.textContent = x.note;
+                li.appendChild(sp);
+              }
+              list.appendChild(li);
+            });
+            count.textContent = t.length + (t.length === 1 ? ' stock' : ' stocks');
+          })
+          .catch(function () { /* leave the static empty state */ });
+      })();
+      </script>
     </div>
   </section>
 </main>
