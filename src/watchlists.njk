@@ -1,0 +1,74 @@
+{% set root = "../" %}
+{% set toTop = "#main" %}
+{% extends "base.njk" %}
+
+{% block head %}
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Watchlists — Aslam</title>
+  <meta name="description" content="Stocks Aslam is watching — long term, options, swings, and the names that triggered the morning market brief's setup.">
+  <link rel="canonical" href="https://iamaslam.com/watchlists/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Aslam">
+  <meta property="og:title" content="Watchlists — Aslam">
+  <meta property="og:description" content="Stocks Aslam is watching — long term, options, swings, and the names that triggered the morning market brief's setup.">
+  <meta property="og:url" content="https://iamaslam.com/watchlists/">
+  <meta name="theme-color" content="#FFFCF7">
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter+Tight:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@300..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+</head>
+{% endblock %}
+
+{% block content %}
+<main id="main">
+  <section class="section" id="top" aria-label="Watchlists">
+    <div class="container">
+      <div class="sec-head">
+        <p class="eyebrow" style="--dot: var(--teal)">Watchlists</p>
+        <h1 class="sec-title">What I&rsquo;m <span class="mark">watching</span></h1>
+        <p class="sec-sub">Separate lists for separate jobs — long term, options, swings. The Market Brief list fills itself: every morning, any stock that triggers the magic setup joins it automatically. Tap a ticker for its quote.</p>
+      </div>
+
+      <div class="wl-grid">
+{% for wl in collections.watchlists %}
+        <article class="wl-card">
+          <div class="wl-card-top">
+            <h2 class="wl-name">{{ wl.data.title }}</h2>
+{% if wl.data.auto %}
+            <span class="wl-badge">Auto · morning scan</span>
+{% endif %}
+          </div>
+{% if wl.data.desc %}
+          <p class="wl-desc">{{ wl.data.desc }}</p>
+{% endif %}
+{% if wl.data.tickers and wl.data.tickers.length %}
+          <ul class="wl-list">
+{% for t in wl.data.tickers %}
+            <li class="wl-item">
+              <a class="wl-ticker" href="https://finance.yahoo.com/quote/{{ t.symbol | upper }}" target="_blank" rel="noopener">${{ t.symbol | upper }}</a>
+{% if t.note %}
+              <span class="wl-note">{{ t.note }}</span>
+{% endif %}
+            </li>
+{% endfor %}
+          </ul>
+          <p class="wl-count">{{ wl.data.tickers.length }} stock{% if wl.data.tickers.length != 1 %}s{% endif %}</p>
+{% else %}
+          <p class="wl-empty">Nothing here yet.</p>
+{% endif %}
+{% if wl.templateContent %}
+          <div class="wl-notes">{{ wl.templateContent | safe }}</div>
+{% endif %}
+        </article>
+{% endfor %}
+      </div>
+
+      <p class="wl-foot">Lists are edited from the site admin. The Market Brief list is managed by the morning scan — tickers are added when they trigger, never removed automatically.</p>
+    </div>
+  </section>
+</main>
+{% endblock %}

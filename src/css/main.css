@@ -478,3 +478,34 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.03em; line-hei
   .marquee-track { animation: none; }
   .sticker { animation: none; }
 }
+
+/* ===== Watchlists ===== */
+.wl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; }
+.wl-card {
+  background: var(--paper); border: 2px solid var(--ink); border-radius: var(--r-card);
+  box-shadow: var(--shadow); padding: 1.5rem; display: flex; flex-direction: column; gap: 0.9rem;
+}
+.wl-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+.wl-name { font-size: 1.5rem; font-weight: 800; margin: 0; }
+.wl-badge {
+  font-family: var(--font-mono); font-size: 0.62rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.1em; white-space: nowrap;
+  background: var(--sun-soft); border: 2px solid var(--ink);
+  border-radius: var(--r-pill); padding: 0.25rem 0.7rem; color: var(--ink-70);
+}
+.wl-desc { color: var(--ink-70); font-size: 1rem; margin: 0; }
+.wl-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+.wl-item { display: flex; align-items: baseline; gap: 0.7rem; flex-wrap: wrap; }
+.wl-ticker {
+  font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700;
+  background: var(--paper-2); border: 2px solid var(--ink);
+  border-radius: var(--r-pill); padding: 0.3rem 0.8rem; color: var(--ink);
+  text-decoration: none; transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+.wl-ticker:hover { transform: translate(-1px, -1px); box-shadow: var(--shadow-sm); }
+.wl-note { color: var(--ink-70); font-size: 0.9rem; }
+.wl-count { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-45); margin: 0; }
+.wl-empty { color: var(--ink-45); font-style: italic; margin: 0; }
+.wl-notes { color: var(--ink-70); font-size: 0.95rem; }
+.wl-notes p { margin: 0; }
+.wl-foot { color: var(--ink-70); font-size: 0.95rem; max-width: 56ch; margin-top: 2.5rem; }

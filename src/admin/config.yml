@@ -49,3 +49,44 @@ collections:
         name: "body"
         widget: "markdown"
         hint: "Write normally. Use the toolbar for headings, bold, quotes and lists. The site designs it for you."
+  - name: "watchlists"
+    label: "Watchlists"
+    label_singular: "Watchlist"
+    folder: "src/watchlists"
+    create: true
+    slug: "{{slug}}"
+    summary: "{{title}}"
+    sortable_fields: ["title"]
+    fields:
+      - label: "Title"
+        name: "title"
+        widget: "string"
+        hint: "Shown on the Watchlists page, e.g. Long Term, Options, Swings."
+      - label: "Short description"
+        name: "desc"
+        widget: "text"
+        required: false
+        hint: "One line under the title."
+      - label: "Managed by the morning scan"
+        name: "auto"
+        widget: "boolean"
+        default: false
+        hint: "Leave OFF for your own lists. ON only for the Market Brief list — the morning scan adds triggered stocks to it automatically."
+      - label: "Tickers"
+        name: "tickers"
+        widget: "list"
+        hint: "One row per stock. Symbol in capitals, e.g. NVDA."
+        fields:
+          - label: "Symbol"
+            name: "symbol"
+            widget: "string"
+          - label: "Note"
+            name: "note"
+            widget: "string"
+            required: false
+            hint: "Optional — why it is on the list, e.g. triggered Oct 28, line $82.50."
+      - label: "Notes"
+        name: "body"
+        widget: "markdown"
+        required: false
+        hint: "Optional free text shown under the tickers."

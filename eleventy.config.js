@@ -13,6 +13,14 @@ module.exports = function (eleventyConfig) {
     return api.getFilteredByGlob("src/essays/*.md").sort((a, b) => a.date - b.date);
   });
 
+  // Watchlists collection: the morning-scan list first, then A–Z
+  eleventyConfig.addCollection("watchlists", function (api) {
+    return api.getFilteredByGlob("src/watchlists/*.md").sort((a, b) => {
+      if (!!a.data.auto !== !!b.data.auto) return a.data.auto ? -1 : 1;
+      return String(a.data.title).localeCompare(String(b.data.title));
+    });
+  });
+
   // Category pill colors (matches the live design)
   eleventyConfig.addNunjucksGlobal("catSoft", {
     "Artificial Intelligence": "var(--cobalt-soft)",
