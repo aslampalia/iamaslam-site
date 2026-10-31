@@ -116,10 +116,15 @@
             </div>
           </div>
           <button class="btn btn-primary tj-add" id="tj-add" type="button">Log this trade</button>
-          <p class="tj-note">Rules from the backtest: buy the retest, risk 8%, take 8%, and if the trade goes nowhere, out after 40 trading days. Trading days = Monday to Friday; market holidays are not counted. Your journal is saved in this browser on this device only — nothing is uploaded.</p>
+          <p class="tj-note">Rules from the backtest: buy the retest, risk 8%, take 8%, and if the trade goes nowhere, out after 40 trading days. Trading days = Monday to Friday; market holidays are not counted. Your journal is saved in this browser on this device only — nothing is uploaded. Switching phones or laptops? Tap <strong>Download backup</strong> here first, then <strong>Restore from backup</strong> on the new device and pick that file — your whole journal moves with you.</p>
         </div>
 
         <div class="tj-stats" id="tj-stats"></div>
+        <div class="tj-actions" style="margin-bottom: 1rem;">
+          <button class="tj-btn" id="tj-export" type="button">Download backup</button>
+          <button class="tj-btn" id="tj-import" type="button">Restore from backup</button>
+          <input type="file" id="tj-file" accept=".json,application/json" style="display:none">
+        </div>
         <div id="tj-list"></div>
         <div class="tj-empty" id="tj-empty">No trades logged yet. Your first trade will live here.</div>
       </div>
@@ -313,6 +318,50 @@
   dateEl.value = todayLocal();
   calc();
   render();
+
+  $("tj-export").addEventListener("click", function () {
+    var blob = new Blob([JSON.stringify(load(), null, 2)], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "trade-journal-backup.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+  });
+  var fileEl = $("tj-file");
+  $("tj-import").addEventListener("click", function () { fileEl.click(); });
+  fileEl.addEventListener("change", function () {
+    var f = fileEl.files && fileEl.files[0];
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var data = JSON.parse(reader.result);
+        if (!Array.isArray(data)) throw new Error("not a backup file");
+        var clean = data.filter(function (r) {
+          return r && typeof r.ticker === "string" && typeof r.entry === "number" && typeof r.date === "string";
+        }).map(function (r) {
+          return {
+            id: r.id || Date.now() + Math.random(), ticker: r.ticker, entry: r.entry,
+            date: r.date, amount: typeof r.amount === "number" ? r.amount : null,
+            status: ["active", "won", "lost", "time"].indexOf(r.status) >= 0 ? r.status : "active",
+            exitPrice: typeof r.exitPrice === "number" ? r.exitPrice : null,
+            createdAt: r.createdAt || Date.now()
+          };
+        });
+        if (clean.length === 0) { alert("That file has no trades in it."); return; }
+        if (load().length > 0 && !confirm("Replace the journal on this device with the backup (" + clean.length + " trades)?")) return;
+        save(clean);
+        render();
+        alert("Journal restored: " + clean.length + " trades.");
+      } catch (err) {
+        alert("That file could not be read as a journal backup.");
+      }
+      fileEl.value = "";
+    };
+    reader.readAsText(f);
+  });
 })();
 </script>
 {% endblock %}
