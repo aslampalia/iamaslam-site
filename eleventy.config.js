@@ -7,6 +7,7 @@ module.exports = function (eleventyConfig) {
  
   eleventyConfig.addPassthroughCopy("src/robots.txt");
   eleventyConfig.addPassthroughCopy("src/404.html");
+  eleventyConfig.addPassthroughCopy("src/apple-touch-icon.png");
 
   // Essays collection, oldest → newest
   eleventyConfig.addCollection("essays", function (api) {
