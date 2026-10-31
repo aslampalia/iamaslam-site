@@ -1,0 +1,318 @@
+{% set root = "../" %}
+{% set toTop = "#main" %}
+{% extends "base.njk" %}
+
+{% block head %}
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Trade Journal — Aslam</title>
+  <meta name="description" content="Stop loss and take profit calculator for the retest system: 1:1 risk to reward, 8% stop, 8% target, 40 trading day time exit. Plus a running trade journal with a days-left clock on every trade.">
+  <link rel="canonical" href="https://iamaslam.com/trade-journal/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Aslam">
+  <meta property="og:title" content="Trade Journal — Aslam">
+  <meta property="og:description" content="1:1 RR calculator (8% stop, 8% target, 40-day time exit) and trade journal for the retest system.">
+  <meta property="og:url" content="https://iamaslam.com/trade-journal/">
+  <meta name="theme-color" content="#FFFCF7">
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter+Tight:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@300..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .tj-wrap { max-width: 860px; margin: 0 auto; }
+    .tj-card { background: #fff; border: 2px solid var(--ink); box-shadow: var(--shadow); padding: 1.1rem 1.1rem 1.25rem; margin-bottom: 1.6rem; }
+    .tj-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+    @media (max-width: 560px) { .tj-form { grid-template-columns: 1fr; } }
+    .tj-field label { display: block; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-70); margin-bottom: 0.35rem; }
+    .tj-field input { width: 100%; box-sizing: border-box; font-family: var(--font-mono); font-size: 1.15rem; font-weight: 700; padding: 0.6rem 0.7rem; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); border-radius: 0; }
+    .tj-field input:focus { outline: 3px solid var(--lime); outline-offset: 1px; }
+    .tj-outs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.9rem; margin-top: 1.1rem; }
+    @media (max-width: 560px) { .tj-outs { grid-template-columns: 1fr; } }
+    .tj-out { border: 2px solid var(--ink); padding: 0.7rem 0.8rem; background: var(--paper); }
+    .tj-out .k { font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; }
+    .tj-out .v { font-family: var(--font-display); font-weight: 800; font-size: 1.7rem; line-height: 1.05; margin-top: 0.2rem; }
+    .tj-out .s { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-70); margin-top: 0.25rem; }
+    .tj-out.sl { box-shadow: 4px 4px 0 #d64541; } .tj-out.sl .k { color: #d64541; }
+    .tj-out.tp { box-shadow: 4px 4px 0 #1a9850; } .tj-out.tp .k { color: #1a9850; }
+    .tj-out.tm { box-shadow: 4px 4px 0 #b8860b; } .tj-out.tm .k { color: #b8860b; }
+    .tj-add { margin-top: 1.1rem; width: 100%; }
+    .tj-note { font-size: 0.85rem; color: var(--ink-70); margin-top: 0.8rem; }
+    .tj-stats { display: flex; flex-wrap: wrap; gap: 0.5rem 1.2rem; font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem; }
+    .tj-entry { background: #fff; border: 2px solid var(--ink); box-shadow: var(--shadow-sm); padding: 0.8rem 0.9rem; margin-bottom: 0.9rem; }
+    .tj-row1 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem 0.9rem; }
+    .tj-tick { font-family: var(--font-display); font-weight: 800; font-size: 1.45rem; letter-spacing: -0.02em; }
+    .tj-nums { font-family: var(--font-mono); font-size: 0.9rem; font-weight: 700; }
+    .tj-nums .sl { color: #d64541; } .tj-nums .tp { color: #1a9850; }
+    .tj-date { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-70); }
+    .tj-badge { font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; border: 2px solid var(--ink); padding: 0.12rem 0.45rem; }
+    .tj-badge.won { background: #1a9850; color: #fff; }
+    .tj-badge.lost { background: #d64541; color: #fff; }
+    .tj-badge.time { background: #b8860b; color: #fff; }
+    .tj-bar { height: 14px; border: 2px solid var(--ink); background: #eee7d8; margin-top: 0.6rem; position: relative; }
+    .tj-bar > div { height: 100%; transition: width 0.3s; }
+    .tj-bar .g { background: #1a9850; } .tj-bar .y { background: #f2c018; } .tj-bar .r { background: #d64541; }
+    .tj-days { font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700; margin-top: 0.4rem; }
+    .tj-days .r { color: #d64541; } .tj-days .y { color: #9a7400; } .tj-days .g { color: #1a9850; }
+    .tj-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.65rem; }
+    .tj-btn { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); padding: 0.32rem 0.6rem; cursor: pointer; }
+    .tj-btn:hover { background: var(--ink); color: var(--paper); }
+    .tj-btn.danger:hover { background: #d64541; border-color: #d64541; color: #fff; }
+    .tj-close { display: none; margin-top: 0.65rem; gap: 0.45rem; align-items: center; flex-wrap: wrap; }
+    .tj-close.open { display: flex; }
+    .tj-close input { font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; padding: 0.35rem 0.5rem; border: 2px solid var(--ink); width: 8.5rem; }
+    .tj-empty { font-family: var(--font-mono); font-size: 0.9rem; color: var(--ink-70); border: 2px dashed var(--ink-45); padding: 1rem; text-align: center; }
+    .tj-del { margin-left: auto; }
+  </style>
+</head>
+{% endblock %}
+
+{% block content %}
+<main id="main">
+  <section class="section" id="top" aria-label="Trade journal">
+    <div class="container">
+      <div class="sec-head">
+        <p class="eyebrow" style="--dot: var(--teal)">Trade Journal</p>
+        <h1 class="sec-title">The retest system, <span class="mark">on rails</span></h1>
+        <p class="sec-sub">Enter a ticker and your entry price. The system does the rest: stop loss at &minus;8%, take profit at +8% (1:1), and a hard time exit after 40 trading days. Log the trade and the journal counts down the days for you.</p>
+      </div>
+
+      <div class="tj-wrap">
+        <div class="tj-card">
+          <div class="tj-form">
+            <div class="tj-field">
+              <label for="tj-ticker">Ticker</label>
+              <input id="tj-ticker" type="text" placeholder="AAPL" autocomplete="off" style="text-transform: uppercase">
+            </div>
+            <div class="tj-field">
+              <label for="tj-entry">Entry price ($)</label>
+              <input id="tj-entry" type="number" step="0.01" min="0" placeholder="100.00" inputmode="decimal">
+            </div>
+            <div class="tj-field">
+              <label for="tj-date">Entry date</label>
+              <input id="tj-date" type="date">
+            </div>
+            <div class="tj-field">
+              <label for="tj-amount">Position size ($) — optional</label>
+              <input id="tj-amount" type="number" step="1" min="0" placeholder="1000" inputmode="decimal">
+            </div>
+          </div>
+          <div class="tj-outs">
+            <div class="tj-out sl">
+              <div class="k">Stop loss · &minus;8%</div>
+              <div class="v" id="tj-sl">&mdash;</div>
+              <div class="s" id="tj-sl-sub">enter a price</div>
+            </div>
+            <div class="tj-out tp">
+              <div class="k">Take profit · +8% · 1:1</div>
+              <div class="v" id="tj-tp">&mdash;</div>
+              <div class="s" id="tj-tp-sub">enter a price</div>
+            </div>
+            <div class="tj-out tm">
+              <div class="k">Time exit · 40 trading days</div>
+              <div class="v" id="tj-tm">&mdash;</div>
+              <div class="s" id="tj-tm-sub">pick an entry date</div>
+            </div>
+          </div>
+          <button class="btn btn-primary tj-add" id="tj-add" type="button">Log this trade</button>
+          <p class="tj-note">Rules from the backtest: buy the retest, risk 8%, take 8%, and if the trade goes nowhere, out after 40 trading days. Trading days = Monday to Friday; market holidays are not counted. Your journal is saved in this browser on this device only — nothing is uploaded.</p>
+        </div>
+
+        <div class="tj-stats" id="tj-stats"></div>
+        <div id="tj-list"></div>
+        <div class="tj-empty" id="tj-empty">No trades logged yet. Your first trade will live here.</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  var HOLD = 40;
+  var KEY = "tj-entries-v1";
+  var $ = function (id) { return document.getElementById(id); };
+  var tickerEl = $("tj-ticker"), entryEl = $("tj-entry"), dateEl = $("tj-date"),
+      amountEl = $("tj-amount"), slEl = $("tj-sl"), tpEl = $("tj-tp"),
+      tmEl = $("tj-tm"), slSub = $("tj-sl-sub"), tpSub = $("tj-tp-sub"),
+      tmSub = $("tj-tm-sub"), listEl = $("tj-list"), emptyEl = $("tj-empty"),
+      statsEl = $("tj-stats");
+
+  function todayLocal() {
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function parseDate(s) {
+    var p = s.split("-");
+    return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  }
+  function fmtDate(d) {
+    return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+  }
+  function money(x) {
+    return "$" + x.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function isTradingDay(d) { var w = d.getDay(); return w >= 1 && w <= 5; }
+  function addTradingDays(start, n) {
+    var d = new Date(start.getTime()), added = 0;
+    while (added < n) { d.setDate(d.getDate() + 1); if (isTradingDay(d)) added++; }
+    return d;
+  }
+  function tradingDaysElapsed(from, to) {
+    var d = new Date(from.getTime()), n = 0;
+    while (d < to) { d.setDate(d.getDate() + 1); if (isTradingDay(d) && d <= to) n++; }
+    return n;
+  }
+  function daysLeft(e) {
+    var start = parseDate(e.date);
+    var end = new Date(); end.setHours(0, 0, 0, 0);
+    if (end <= start) return HOLD;
+    return HOLD - tradingDaysElapsed(start, end);
+  }
+
+  function calc() {
+    var p = parseFloat(entryEl.value);
+    var amt = parseFloat(amountEl.value);
+    if (!p || p <= 0) {
+      slEl.textContent = tpEl.textContent = "—";
+      slSub.textContent = tpSub.textContent = "enter a price";
+    } else {
+      var sl = p * 0.92, tp = p * 1.08;
+      slEl.textContent = money(sl);
+      tpEl.textContent = money(tp);
+      slSub.textContent = "sell if it falls to here · loses " + money(p - sl) + "/share" + (amt > 0 ? " · " + money(amt * 0.08) + " on your size" : "");
+      tpSub.textContent = "sell if it rises to here · makes " + money(tp - p) + "/share" + (amt > 0 ? " · " + money(amt * 0.08) + " on your size" : "");
+    }
+    if (dateEl.value) {
+      var exit = addTradingDays(parseDate(dateEl.value), HOLD);
+      tmEl.textContent = exit.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      tmSub.textContent = "exit by " + fmtDate(exit) + " if it goes nowhere";
+    } else {
+      tmEl.textContent = "—";
+      tmSub.textContent = "pick an entry date";
+    }
+  }
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+    catch (err) { return []; }
+  }
+  function save(rows) { localStorage.setItem(KEY, JSON.stringify(rows)); }
+
+  function barClass(left) { return left <= 10 ? "r" : (left <= 20 ? "y" : "g"); }
+
+  function render() {
+    var rows = load();
+    rows.sort(function (a, b) {
+      if ((a.status === "active") !== (b.status === "active")) return a.status === "active" ? -1 : 1;
+      return b.createdAt - a.createdAt;
+    });
+    var active = rows.filter(function (r) { return r.status === "active"; }).length;
+    var won = rows.filter(function (r) { return r.status === "won"; }).length;
+    var lost = rows.filter(function (r) { return r.status === "lost"; }).length;
+    var timed = rows.filter(function (r) { return r.status === "time"; }).length;
+    var closed = won + lost + timed;
+    statsEl.textContent = rows.length === 0 ? "" :
+      "Active: " + active + " · Won: " + won + " · Lost: " + lost + " · Time exits: " + timed +
+      (closed > 0 ? " · Win rate: " + Math.round(won / closed * 100) + "%" : "");
+    emptyEl.style.display = rows.length === 0 ? "block" : "none";
+    listEl.innerHTML = "";
+    rows.forEach(function (e) {
+      var sl = e.entry * 0.92, tp = e.entry * 1.08;
+      var exitBy = addTradingDays(parseDate(e.date), HOLD);
+      var card = document.createElement("div");
+      card.className = "tj-entry";
+      var html = '<div class="tj-row1">' +
+        '<span class="tj-tick">' + e.ticker + '</span>' +
+        '<span class="tj-nums">Entry ' + money(e.entry) + ' · <span class="sl">SL ' + money(sl) + '</span> · <span class="tp">TP ' + money(tp) + '</span></span>' +
+        '<span class="tj-date">in ' + fmtDate(parseDate(e.date)) + '</span>';
+      if (e.status === "won") html += '<span class="tj-badge won">Won</span>';
+      if (e.status === "lost") html += '<span class="tj-badge lost">Lost</span>';
+      if (e.status === "time") html += '<span class="tj-badge time">Time exit</span>';
+      if (typeof e.exitPrice === "number") {
+        var pct = (e.exitPrice / e.entry - 1) * 100;
+        html += '<span class="tj-nums">out ' + money(e.exitPrice) + ' (' + (pct >= 0 ? "+" : "") + pct.toFixed(1) + '%)</span>';
+      }
+      html += '<button class="tj-btn danger tj-del" data-act="del" type="button">Delete</button></div>';
+      if (e.status === "active") {
+        var left = daysLeft(e);
+        var cls = barClass(Math.max(left, 0));
+        var pctW = Math.max(0, Math.min(100, left / HOLD * 100));
+        html += '<div class="tj-bar"><div class="' + cls + '" style="width:' + pctW + '%"></div></div>';
+        if (left > 0) {
+          html += '<div class="tj-days"><span class="' + cls + '">' + left + ' trading day' + (left === 1 ? "" : "s") + ' left</span> · time exit ' + fmtDate(exitBy) + '</div>';
+        } else {
+          html += '<div class="tj-days"><span class="r">TIME UP — exit this trade</span> · 40 trading days passed on ' + fmtDate(exitBy) + '</div>';
+        }
+        html += '<div class="tj-actions">' +
+          '<button class="tj-btn" data-act="won" type="button">Hit TP ✓</button>' +
+          '<button class="tj-btn" data-act="lost" type="button">Hit SL ✗</button>' +
+          '<button class="tj-btn" data-act="time" type="button">Time exit</button></div>' +
+          '<div class="tj-close"><span class="tj-date">Exit price:</span>' +
+          '<input type="number" step="0.01" min="0" inputmode="decimal">' +
+          '<button class="tj-btn" data-act="saveclose" type="button">Save</button>' +
+          '<button class="tj-btn" data-act="cancelclose" type="button">Cancel</button></div>';
+      }
+      card.innerHTML = html;
+      var closeBox = card.querySelector(".tj-close");
+      var pending = null;
+      card.addEventListener("click", function (ev) {
+        var btn = ev.target.closest("button");
+        if (!btn) return;
+        var act = btn.getAttribute("data-act");
+        var rowsNow = load();
+        var row = null;
+        for (var i = 0; i < rowsNow.length; i++) if (rowsNow[i].id === e.id) row = rowsNow[i];
+        if (!row) return;
+        if (act === "del") {
+          save(rowsNow.filter(function (r) { return r.id !== e.id; }));
+          render();
+        } else if (act === "won" || act === "lost" || act === "time") {
+          pending = act;
+          var inp = closeBox.querySelector("input");
+          inp.value = act === "won" ? (e.entry * 1.08).toFixed(2) : act === "lost" ? (e.entry * 0.92).toFixed(2) : e.entry.toFixed(2);
+          closeBox.classList.add("open");
+          inp.focus(); inp.select();
+        } else if (act === "saveclose") {
+          var v = parseFloat(closeBox.querySelector("input").value);
+          row.status = pending || "time";
+          if (v > 0) row.exitPrice = v;
+          save(rowsNow);
+          render();
+        } else if (act === "cancelclose") {
+          closeBox.classList.remove("open");
+          pending = null;
+        }
+      });
+      listEl.appendChild(card);
+    });
+  }
+
+  $("tj-add").addEventListener("click", function () {
+    var t = tickerEl.value.trim().toUpperCase();
+    var p = parseFloat(entryEl.value);
+    if (!t) { tickerEl.focus(); return; }
+    if (!p || p <= 0) { entryEl.focus(); return; }
+    var rows = load();
+    rows.push({
+      id: Date.now(), ticker: t, entry: p,
+      date: dateEl.value || todayLocal(),
+      amount: parseFloat(amountEl.value) || null,
+      status: "active", exitPrice: null, createdAt: Date.now()
+    });
+    save(rows);
+    tickerEl.value = ""; entryEl.value = ""; amountEl.value = "";
+    dateEl.value = todayLocal();
+    calc();
+    render();
+  });
+  [tickerEl, entryEl, dateEl, amountEl].forEach(function (el) {
+    el.addEventListener("input", calc);
+    el.addEventListener("change", calc);
+  });
+  dateEl.value = todayLocal();
+  calc();
+  render();
+})();
+</script>
+{% endblock %}
