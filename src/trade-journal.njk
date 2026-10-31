@@ -7,12 +7,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Trade Journal — Aslam</title>
-  <meta name="description" content="Stop loss and take profit calculator for the retest system: 1:1 risk to reward, 8% stop, 8% target, 40 trading day time exit. Plus a running trade journal with a days-left clock on every trade.">
+  <meta name="description" content="Stop loss and take profit calculator for the retest system: 1:1 risk to reward, 8% stop, 8% target, 40 trading day time exit. Plus Aslam's running trade journal with a days-left clock on every trade.">
   <link rel="canonical" href="https://iamaslam.com/trade-journal/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Aslam">
   <meta property="og:title" content="Trade Journal — Aslam">
-  <meta property="og:description" content="1:1 RR calculator (8% stop, 8% target, 40-day time exit) and trade journal for the retest system.">
+  <meta property="og:description" content="1:1 RR calculator (8% stop, 8% target, 40-day time exit) and Aslam's trade journal for the retest system.">
   <meta property="og:url" content="https://iamaslam.com/trade-journal/">
   <meta name="theme-color" content="#FFFCF7">
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
@@ -55,7 +55,7 @@
     .tj-bar .g { background: #1a9850; } .tj-bar .y { background: #f2c018; } .tj-bar .r { background: #d64541; }
     .tj-days { font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700; margin-top: 0.4rem; }
     .tj-days .r { color: #d64541; } .tj-days .y { color: #9a7400; } .tj-days .g { color: #1a9850; }
-    .tj-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.65rem; }
+    .tj-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.65rem; align-items: center; }
     .tj-btn { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); padding: 0.32rem 0.6rem; cursor: pointer; }
     .tj-btn:hover { background: var(--ink); color: var(--paper); }
     .tj-btn.danger:hover { background: #d64541; border-color: #d64541; color: #fff; }
@@ -64,6 +64,8 @@
     .tj-close input { font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; padding: 0.35rem 0.5rem; border: 2px solid var(--ink); width: 8.5rem; }
     .tj-empty { font-family: var(--font-mono); font-size: 0.9rem; color: var(--ink-70); border: 2px dashed var(--ink-45); padding: 1rem; text-align: center; }
     .tj-del { margin-left: auto; }
+    .tj-jhead { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.9rem; margin-bottom: 0.9rem; }
+    .tj-jhead h2 { font-family: var(--font-display); font-weight: 800; font-size: 1.6rem; margin: 0; }
   </style>
 </head>
 {% endblock %}
@@ -75,7 +77,7 @@
       <div class="sec-head">
         <p class="eyebrow" style="--dot: var(--teal)">Trade Journal</p>
         <h1 class="sec-title">The retest system, <span class="mark">on rails</span></h1>
-        <p class="sec-sub">Enter a ticker and your entry price. The system does the rest: stop loss at &minus;8%, take profit at +8% (1:1), and a hard time exit after 40 trading days. Log the trade and the journal counts down the days for you.</p>
+        <p class="sec-sub">The calculator is free for anyone: enter an entry price and get the stop loss at &minus;8%, the take profit at +8% (1:1), and the hard time exit after 40 trading days. The journal below is Aslam&rsquo;s own — everyone can watch it, only he can write in it.</p>
       </div>
 
       <div class="tj-wrap">
@@ -115,18 +117,21 @@
               <div class="s" id="tj-tm-sub">pick an entry date</div>
             </div>
           </div>
-          <button class="btn btn-primary tj-add" id="tj-add" type="button">Log this trade</button>
-          <p class="tj-note">Rules from the backtest: buy the retest, risk 8%, take 8%, and if the trade goes nowhere, out after 40 trading days. Trading days = Monday to Friday; market holidays are not counted. Your journal is saved in this browser on this device only — nothing is uploaded. Switching phones or laptops? Tap <strong>Download backup</strong> here first, then <strong>Restore from backup</strong> on the new device and pick that file — your whole journal moves with you.</p>
+          <button class="btn btn-primary tj-add" id="tj-add" type="button">Log this trade (Aslam only)</button>
+          <p class="tj-note">Rules from the backtest: buy the retest, risk 8%, take 8%, and if the trade goes nowhere, out after 40 trading days. Trading days = Monday to Friday; market holidays are not counted.</p>
         </div>
 
-        <div class="tj-stats" id="tj-stats"></div>
-        <div class="tj-actions" style="margin-bottom: 1rem;">
+        <div class="tj-jhead">
+          <h2>Aslam&rsquo;s journal</h2>
+          <button class="tj-btn" id="tj-lock" type="button">Unlock my journal</button>
           <button class="tj-btn" id="tj-export" type="button">Download backup</button>
           <button class="tj-btn" id="tj-import" type="button">Restore from backup</button>
           <input type="file" id="tj-file" accept=".json,application/json" style="display:none">
         </div>
+        <div class="tj-stats" id="tj-stats"></div>
         <div id="tj-list"></div>
-        <div class="tj-empty" id="tj-empty">No trades logged yet. Your first trade will live here.</div>
+        <div class="tj-empty" id="tj-empty">Loading the journal&hellip;</div>
+        <p class="tj-note">The journal lives on Aslam&rsquo;s own server, so it is the same on his phone and his laptop. Anyone can read it; writing needs his PIN.</p>
       </div>
     </div>
   </section>
@@ -135,13 +140,20 @@
 <script>
 (function () {
   var HOLD = 40;
-  var KEY = "tj-entries-v1";
+  var API = "https://129-146-179-218.sslip.io/trade-journal-api";
+  var PIN_KEY = "tj-pin";
+  var LEGACY_KEY = "tj-entries-v1";
   var $ = function (id) { return document.getElementById(id); };
   var tickerEl = $("tj-ticker"), entryEl = $("tj-entry"), dateEl = $("tj-date"),
       amountEl = $("tj-amount"), slEl = $("tj-sl"), tpEl = $("tj-tp"),
       tmEl = $("tj-tm"), slSub = $("tj-sl-sub"), tpSub = $("tj-tp-sub"),
       tmSub = $("tj-tm-sub"), listEl = $("tj-list"), emptyEl = $("tj-empty"),
-      statsEl = $("tj-stats");
+      statsEl = $("tj-stats"), lockBtn = $("tj-lock");
+  var rows = null;
+  var loadError = false;
+
+  function pin() { return localStorage.getItem(PIN_KEY) || ""; }
+  function unlocked() { return !!pin(); }
 
   function todayLocal() {
     var d = new Date();
@@ -198,17 +210,54 @@
     }
   }
 
-  function load() {
-    try { return JSON.parse(localStorage.getItem(KEY)) || []; }
-    catch (err) { return []; }
+  function fetchJournal() {
+    return fetch(API + "/journal").then(function (r) { return r.json(); }).then(function (data) {
+      rows = Array.isArray(data.entries) ? data.entries : [];
+      loadError = false;
+      render();
+    }).catch(function () {
+      rows = null;
+      loadError = true;
+      render();
+    });
   }
-  function save(rows) { localStorage.setItem(KEY, JSON.stringify(rows)); }
+
+  function mutate(payload) {
+    payload.pin = pin();
+    return fetch(API + "/mutate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).then(function (r) {
+      return r.json().then(function (data) {
+        if (r.status === 401) {
+          localStorage.removeItem(PIN_KEY);
+          render();
+          throw new Error("Wrong PIN — journal locked again.");
+        }
+        if (!r.ok) throw new Error(data.error || "Something went wrong.");
+        return data;
+      });
+    });
+  }
 
   function barClass(left) { return left <= 10 ? "r" : (left <= 20 ? "y" : "g"); }
 
   function render() {
-    var rows = load();
-    rows.sort(function (a, b) {
+    lockBtn.textContent = unlocked() ? "Lock journal" : "Unlock my journal";
+    if (loadError) {
+      statsEl.textContent = "";
+      listEl.innerHTML = "";
+      emptyEl.style.display = "block";
+      emptyEl.textContent = "The journal could not load right now. The calculator above still works — try refreshing in a minute.";
+      return;
+    }
+    if (rows === null) {
+      emptyEl.style.display = "block";
+      emptyEl.textContent = "Loading the journal…";
+      return;
+    }
+    var sorted = rows.slice().sort(function (a, b) {
       if ((a.status === "active") !== (b.status === "active")) return a.status === "active" ? -1 : 1;
       return b.createdAt - a.createdAt;
     });
@@ -221,8 +270,9 @@
       "Active: " + active + " · Won: " + won + " · Lost: " + lost + " · Time exits: " + timed +
       (closed > 0 ? " · Win rate: " + Math.round(won / closed * 100) + "%" : "");
     emptyEl.style.display = rows.length === 0 ? "block" : "none";
+    emptyEl.textContent = unlocked() ? "No trades logged yet. Your first trade will live here." : "No trades logged yet.";
     listEl.innerHTML = "";
-    rows.forEach(function (e) {
+    sorted.forEach(function (e) {
       var sl = e.entry * 0.92, tp = e.entry * 1.08;
       var exitBy = addTradingDays(parseDate(e.date), HOLD);
       var card = document.createElement("div");
@@ -238,7 +288,8 @@
         var pct = (e.exitPrice / e.entry - 1) * 100;
         html += '<span class="tj-nums">out ' + money(e.exitPrice) + ' (' + (pct >= 0 ? "+" : "") + pct.toFixed(1) + '%)</span>';
       }
-      html += '<button class="tj-btn danger tj-del" data-act="del" type="button">Delete</button></div>';
+      if (unlocked()) html += '<button class="tj-btn danger tj-del" data-act="del" type="button">Delete</button>';
+      html += '</div>';
       if (e.status === "active") {
         var left = daysLeft(e);
         var cls = barClass(Math.max(left, 0));
@@ -249,78 +300,102 @@
         } else {
           html += '<div class="tj-days"><span class="r">TIME UP — exit this trade</span> · 40 trading days passed on ' + fmtDate(exitBy) + '</div>';
         }
-        html += '<div class="tj-actions">' +
-          '<button class="tj-btn" data-act="won" type="button">Hit TP ✓</button>' +
-          '<button class="tj-btn" data-act="lost" type="button">Hit SL ✗</button>' +
-          '<button class="tj-btn" data-act="time" type="button">Time exit</button></div>' +
-          '<div class="tj-close"><span class="tj-date">Exit price:</span>' +
-          '<input type="number" step="0.01" min="0" inputmode="decimal">' +
-          '<button class="tj-btn" data-act="saveclose" type="button">Save</button>' +
-          '<button class="tj-btn" data-act="cancelclose" type="button">Cancel</button></div>';
+        if (unlocked()) {
+          html += '<div class="tj-actions">' +
+            '<button class="tj-btn" data-act="won" type="button">Hit TP ✓</button>' +
+            '<button class="tj-btn" data-act="lost" type="button">Hit SL ✗</button>' +
+            '<button class="tj-btn" data-act="time" type="button">Time exit</button></div>' +
+            '<div class="tj-close"><span class="tj-date">Exit price:</span>' +
+            '<input type="number" step="0.01" min="0" inputmode="decimal">' +
+            '<button class="tj-btn" data-act="saveclose" type="button">Save</button>' +
+            '<button class="tj-btn" data-act="cancelclose" type="button">Cancel</button></div>';
+        }
       }
       card.innerHTML = html;
-      var closeBox = card.querySelector(".tj-close");
-      var pending = null;
-      card.addEventListener("click", function (ev) {
-        var btn = ev.target.closest("button");
-        if (!btn) return;
-        var act = btn.getAttribute("data-act");
-        var rowsNow = load();
-        var row = null;
-        for (var i = 0; i < rowsNow.length; i++) if (rowsNow[i].id === e.id) row = rowsNow[i];
-        if (!row) return;
-        if (act === "del") {
-          save(rowsNow.filter(function (r) { return r.id !== e.id; }));
-          render();
-        } else if (act === "won" || act === "lost" || act === "time") {
-          pending = act;
-          var inp = closeBox.querySelector("input");
-          inp.value = act === "won" ? (e.entry * 1.08).toFixed(2) : act === "lost" ? (e.entry * 0.92).toFixed(2) : e.entry.toFixed(2);
-          closeBox.classList.add("open");
-          inp.focus(); inp.select();
-        } else if (act === "saveclose") {
-          var v = parseFloat(closeBox.querySelector("input").value);
-          row.status = pending || "time";
-          if (v > 0) row.exitPrice = v;
-          save(rowsNow);
-          render();
-        } else if (act === "cancelclose") {
-          closeBox.classList.remove("open");
-          pending = null;
-        }
-      });
+      if (unlocked()) {
+        var closeBox = card.querySelector(".tj-close");
+        var pending = null;
+        card.addEventListener("click", function (ev) {
+          var btn = ev.target.closest("button");
+          if (!btn) return;
+          var act = btn.getAttribute("data-act");
+          if (act === "del") {
+            if (!confirm("Delete " + e.ticker + " from the journal?")) return;
+            mutate({ action: "delete", id: e.id }).then(fetchJournal).catch(function (err) { alert(err.message); });
+          } else if (act === "won" || act === "lost" || act === "time") {
+            pending = act;
+            var inp = closeBox.querySelector("input");
+            inp.value = act === "won" ? (e.entry * 1.08).toFixed(2) : act === "lost" ? (e.entry * 0.92).toFixed(2) : e.entry.toFixed(2);
+            closeBox.classList.add("open");
+            inp.focus(); inp.select();
+          } else if (act === "saveclose") {
+            var v = parseFloat(closeBox.querySelector("input").value);
+            mutate({ action: "close", id: e.id, status: pending || "time", exitPrice: v > 0 ? v : null })
+              .then(fetchJournal).catch(function (err) { alert(err.message); });
+          } else if (act === "cancelclose") {
+            closeBox.classList.remove("open");
+            pending = null;
+          }
+        });
+      }
       listEl.appendChild(card);
     });
   }
+
+  function askPin() {
+    var p = prompt("Your journal PIN (only you can write in the journal):");
+    if (p) { localStorage.setItem(PIN_KEY, p); return true; }
+    return false;
+  }
+
+  function maybeMigrateLegacy() {
+    var legacy = null;
+    try { legacy = JSON.parse(localStorage.getItem(LEGACY_KEY)); } catch (err) { legacy = null; }
+    if (Array.isArray(legacy) && legacy.length > 0) {
+      if (confirm("You have " + legacy.length + " trade(s) saved in this browser from the first version. Upload them to your online journal now?")) {
+        mutate({ action: "replace_all", entries: legacy }).then(function () {
+          localStorage.removeItem(LEGACY_KEY);
+          fetchJournal();
+        }).catch(function (err) { alert(err.message); });
+      } else {
+        localStorage.removeItem(LEGACY_KEY);
+      }
+    }
+  }
+
+  lockBtn.addEventListener("click", function () {
+    if (unlocked()) {
+      localStorage.removeItem(PIN_KEY);
+      render();
+    } else if (askPin()) {
+      render();
+      maybeMigrateLegacy();
+    }
+  });
 
   $("tj-add").addEventListener("click", function () {
     var t = tickerEl.value.trim().toUpperCase();
     var p = parseFloat(entryEl.value);
     if (!t) { tickerEl.focus(); return; }
     if (!p || p <= 0) { entryEl.focus(); return; }
-    var rows = load();
-    rows.push({
+    if (!unlocked() && !askPin()) return;
+    var entry = {
       id: Date.now(), ticker: t, entry: p,
       date: dateEl.value || todayLocal(),
       amount: parseFloat(amountEl.value) || null,
       status: "active", exitPrice: null, createdAt: Date.now()
-    });
-    save(rows);
-    tickerEl.value = ""; entryEl.value = ""; amountEl.value = "";
-    dateEl.value = todayLocal();
-    calc();
-    render();
+    };
+    mutate({ action: "add", entry: entry }).then(function () {
+      tickerEl.value = ""; entryEl.value = ""; amountEl.value = "";
+      dateEl.value = todayLocal();
+      calc();
+      fetchJournal();
+    }).catch(function (err) { alert(err.message); });
   });
-  [tickerEl, entryEl, dateEl, amountEl].forEach(function (el) {
-    el.addEventListener("input", calc);
-    el.addEventListener("change", calc);
-  });
-  dateEl.value = todayLocal();
-  calc();
-  render();
 
   $("tj-export").addEventListener("click", function () {
-    var blob = new Blob([JSON.stringify(load(), null, 2)], { type: "application/json" });
+    if (!rows) { alert("The journal has not loaded yet."); return; }
+    var blob = new Blob([JSON.stringify(rows, null, 2)], { type: "application/json" });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "trade-journal-backup.json";
@@ -329,8 +404,13 @@
     a.remove();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
   });
+
   var fileEl = $("tj-file");
-  $("tj-import").addEventListener("click", function () { fileEl.click(); });
+  $("tj-import").addEventListener("click", function () {
+    if (!unlocked() && !askPin()) return;
+    render();
+    fileEl.click();
+  });
   fileEl.addEventListener("change", function () {
     var f = fileEl.files && fileEl.files[0];
     if (!f) return;
@@ -341,20 +421,13 @@
         if (!Array.isArray(data)) throw new Error("not a backup file");
         var clean = data.filter(function (r) {
           return r && typeof r.ticker === "string" && typeof r.entry === "number" && typeof r.date === "string";
-        }).map(function (r) {
-          return {
-            id: r.id || Date.now() + Math.random(), ticker: r.ticker, entry: r.entry,
-            date: r.date, amount: typeof r.amount === "number" ? r.amount : null,
-            status: ["active", "won", "lost", "time"].indexOf(r.status) >= 0 ? r.status : "active",
-            exitPrice: typeof r.exitPrice === "number" ? r.exitPrice : null,
-            createdAt: r.createdAt || Date.now()
-          };
         });
         if (clean.length === 0) { alert("That file has no trades in it."); return; }
-        if (load().length > 0 && !confirm("Replace the journal on this device with the backup (" + clean.length + " trades)?")) return;
-        save(clean);
-        render();
-        alert("Journal restored: " + clean.length + " trades.");
+        if (!confirm("Replace the online journal with this backup (" + clean.length + " trades)?")) return;
+        mutate({ action: "replace_all", entries: clean }).then(function () {
+          alert("Journal restored: " + clean.length + " trades.");
+          fetchJournal();
+        }).catch(function (err) { alert(err.message); });
       } catch (err) {
         alert("That file could not be read as a journal backup.");
       }
@@ -362,6 +435,15 @@
     };
     reader.readAsText(f);
   });
+
+  [tickerEl, entryEl, dateEl, amountEl].forEach(function (el) {
+    el.addEventListener("input", calc);
+    el.addEventListener("change", calc);
+  });
+  dateEl.value = todayLocal();
+  calc();
+  render();
+  fetchJournal();
 })();
 </script>
 {% endblock %}
