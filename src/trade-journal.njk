@@ -59,6 +59,9 @@
     .tj-btn { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); padding: 0.32rem 0.6rem; cursor: pointer; }
     .tj-btn:hover { background: var(--ink); color: var(--paper); }
     .tj-btn.danger:hover { background: #d64541; border-color: #d64541; color: #fff; }
+    .tj-btn.on { background: var(--ink); color: var(--paper); }
+    .tj-typebar { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; margin-bottom: 0.9rem; }
+    .tj-typebar .k { font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-70); margin-right: 0.2rem; }
     .tj-close { display: none; margin-top: 0.65rem; gap: 0.45rem; align-items: center; flex-wrap: wrap; }
     .tj-close.open { display: flex; }
     .tj-close input { font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; padding: 0.35rem 0.5rem; border: 2px solid var(--ink); width: 8.5rem; }
@@ -82,22 +85,48 @@
 
       <div class="tj-wrap">
         <div class="tj-card">
+          <div class="tj-typebar">
+            <span class="k">Trade type</span>
+            <button class="tj-btn on" id="tj-type-stock" type="button">Stock</button>
+            <button class="tj-btn" id="tj-type-call" type="button">Call</button>
+            <button class="tj-btn" id="tj-type-spread" type="button">Call spread</button>
+          </div>
           <div class="tj-form">
             <div class="tj-field">
               <label for="tj-ticker">Ticker</label>
               <input id="tj-ticker" type="text" placeholder="AAPL" autocomplete="off" style="text-transform: uppercase">
             </div>
             <div class="tj-field">
-              <label for="tj-entry">Entry price ($)</label>
+              <label for="tj-entry" id="tj-lbl-entry">Entry price ($)</label>
               <input id="tj-entry" type="number" step="0.01" min="0" placeholder="100.00" inputmode="decimal">
             </div>
             <div class="tj-field">
               <label for="tj-date">Entry date</label>
               <input id="tj-date" type="date">
             </div>
-            <div class="tj-field">
+            <div class="tj-field" id="tj-f-amount">
               <label for="tj-amount">Position size ($) — optional</label>
               <input id="tj-amount" type="number" step="1" min="0" placeholder="1000" inputmode="decimal">
+            </div>
+            <div class="tj-field" id="tj-f-strike" style="display:none">
+              <label for="tj-strike" id="tj-lbl-strike">Call strike ($)</label>
+              <input id="tj-strike" type="number" step="0.01" min="0" placeholder="100.00" inputmode="decimal">
+            </div>
+            <div class="tj-field" id="tj-f-strike2" style="display:none">
+              <label for="tj-strike2">Sell call strike ($)</label>
+              <input id="tj-strike2" type="number" step="0.01" min="0" placeholder="108.00" inputmode="decimal">
+            </div>
+            <div class="tj-field" id="tj-f-expiry" style="display:none">
+              <label for="tj-expiry">Option expiry</label>
+              <input id="tj-expiry" type="date">
+            </div>
+            <div class="tj-field" id="tj-f-premium" style="display:none">
+              <label for="tj-premium" id="tj-lbl-premium">Premium paid ($ per contract)</label>
+              <input id="tj-premium" type="number" step="0.01" min="0" placeholder="2.50" inputmode="decimal">
+            </div>
+            <div class="tj-field" id="tj-f-contracts" style="display:none">
+              <label for="tj-contracts">Contracts</label>
+              <input id="tj-contracts" type="number" step="1" min="1" placeholder="1" inputmode="numeric">
             </div>
           </div>
           <div class="tj-outs">
@@ -117,8 +146,10 @@
               <div class="s" id="tj-tm-sub">pick an entry date</div>
             </div>
           </div>
+          <p class="tj-note" id="tj-opt-note" style="display:none"></p>
           <button class="btn btn-primary tj-add" id="tj-add" type="button">Log this trade</button>
           <p class="tj-note">Rules from the backtest: buy the retest, risk 8%, take 8%, and if the trade goes nowhere, out after 40 trading days. Trading days = days the US market is open: weekends and market holidays (New Year, MLK Day, Presidents Day, Good Friday, Memorial Day, Juneteenth, Independence Day, Labor Day, Thanksgiving, Christmas) do not count toward the 40. Where the trade lands depends on the mode below: your device journal, or Aslam&rsquo;s journal when he is unlocked.</p>
+          <p class="tj-note">Playing a setup with options instead of shares? Pick <strong>Call</strong> or <strong>Call spread</strong> under Trade type. The exits still follow the stock &mdash; you close the option when the stock hits its stop, its target, or day 40 &mdash; and the journal shows your real max risk, a Black-Scholes model estimate at the target and the stop, and, once you close, your actual R next to the stock plan&rsquo;s R, so the vehicle&rsquo;s cost is measured, not guessed.</p>
         </div>
 
         <div class="tj-card">
@@ -229,6 +260,10 @@
   var serverError = false;
   var vetoData = null;
   var vetoError = false;
+  var jtype = "stock";
+  var strikeEl = $("tj-strike"), strike2El = $("tj-strike2"),
+      expiryEl = $("tj-expiry"), premiumEl = $("tj-premium"),
+      contractsEl = $("tj-contracts"), optNote = $("tj-opt-note");
 
   function pin() { return localStorage.getItem(PIN_KEY) || ""; }
   function unlocked() { return !!pin(); }
@@ -312,6 +347,83 @@
     return HOLD - tradingDaysElapsed(start, end);
   }
 
+  /* ---------- options math (Black-Scholes, same model as the backtests: r = 4%) ---------- */
+  function erf(x) {
+    var s = x < 0 ? -1 : 1; x = Math.abs(x);
+    var t = 1 / (1 + 0.3275911 * x);
+    var y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+    return s * y;
+  }
+  function ncdf(x) { return 0.5 * (1 + erf(x / Math.SQRT2)); }
+  function bsCall(S, K, T, sigma) {
+    if (T <= 0 || sigma <= 0) return Math.max(S - K, 0);
+    var d1 = (Math.log(S / K) + (0.04 + sigma * sigma / 2) * T) / (sigma * Math.sqrt(T));
+    var d2 = d1 - sigma * Math.sqrt(T);
+    return S * ncdf(d1) - K * Math.exp(-0.04 * T) * ncdf(d2);
+  }
+  function isOpt(e) { return e && (e.jtype === "call" || e.jtype === "spread"); }
+  function optPrice(o, S, T, sigma) {
+    var v = bsCall(S, o.strike, T, sigma);
+    if (o.jtype === "spread") v -= bsCall(S, o.strike2, T, sigma);
+    return Math.max(0, v);
+  }
+  function yearsBetween(d1, d2) { return (parseDate(d2) - parseDate(d1)) / 86400000 / 365; }
+  function impliedSigma(o) {
+    var T = yearsBetween(o.date, o.expiry);
+    if (!(T > 0) || !(o.premium > 0) || !(o.strike > 0)) return null;
+    if (o.jtype === "spread" && !(o.strike2 > o.strike)) return null;
+    // A spread's value is not monotone in vol, so scan for the first
+    // bracket where the model price crosses the premium paid, then
+    // bisect inside it (the lowest-vol root is the sane regime).
+    var prevS = 0.02, prevP = optPrice(o, o.entry, T, prevS) - o.premium;
+    if (prevP === 0) return prevS;
+    for (var s = 0.04; s <= 2.5001; s += 0.02) {
+      var p = optPrice(o, o.entry, T, s) - o.premium;
+      if (p === 0) return s;
+      if ((p < 0) !== (prevP < 0)) {
+        var lo = prevS, hi = s, negLo = prevP < 0;
+        for (var i = 0; i < 50; i++) {
+          var mid = (lo + hi) / 2;
+          var fm = optPrice(o, o.entry, T, mid) - o.premium;
+          if ((fm < 0) === negLo) lo = mid; else hi = mid;
+        }
+        return (lo + hi) / 2;
+      }
+      prevS = s; prevP = p;
+    }
+    return null;
+  }
+  // Model estimate: what the contract would be worth if the stock
+  // reaches its target / stop with the move taking ~2 weeks, vol
+  // implied by the premium paid and held there. A model, not a quote.
+  function modelEst(o) {
+    var sig = impliedSigma(o);
+    if (!sig) return null;
+    var T1 = Math.max(yearsBetween(o.date, o.expiry) - 15 / 365, 0);
+    return { sigma: sig, tp: optPrice(o, o.entry * 1.08, T1, sig), sl: optPrice(o, o.entry * 0.92, T1, sig) };
+  }
+  function fmtR(x) { return (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(2) + "R"; }
+  function pctTxt(x) { return (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(0) + "%"; }
+
+  function setType(t) {
+    jtype = t;
+    $("tj-type-stock").classList.toggle("on", t === "stock");
+    $("tj-type-call").classList.toggle("on", t === "call");
+    $("tj-type-spread").classList.toggle("on", t === "spread");
+    var opt = t !== "stock";
+    $("tj-f-amount").style.display = opt ? "none" : "";
+    $("tj-f-strike").style.display = opt ? "" : "none";
+    $("tj-f-strike2").style.display = t === "spread" ? "" : "none";
+    $("tj-f-expiry").style.display = opt ? "" : "none";
+    $("tj-f-premium").style.display = opt ? "" : "none";
+    $("tj-f-contracts").style.display = opt ? "" : "none";
+    optNote.style.display = opt ? "" : "none";
+    $("tj-lbl-entry").textContent = opt ? "Stock entry price ($) — the retest close" : "Entry price ($)";
+    $("tj-lbl-strike").textContent = t === "spread" ? "Buy call strike ($)" : "Call strike ($)";
+    $("tj-lbl-premium").textContent = t === "spread" ? "Net debit ($ per spread)" : "Premium paid ($ per contract)";
+    calc();
+  }
+
   function calc() {
     var p = parseFloat(entryEl.value);
     var amt = parseFloat(amountEl.value);
@@ -332,6 +444,35 @@
     } else {
       tmEl.textContent = "—";
       tmSub.textContent = "pick an entry date";
+    }
+    if (jtype !== "stock") {
+      var o = {
+        jtype: jtype, entry: p, date: dateEl.value || todayLocal(),
+        strike: parseFloat(strikeEl.value), strike2: parseFloat(strike2El.value),
+        expiry: expiryEl.value, premium: parseFloat(premiumEl.value)
+      };
+      var n = parseInt(contractsEl.value, 10);
+      if (o.premium > 0 && n >= 1) {
+        var txt = "Options math — max risk " + money(o.premium * n * 100) +
+          " (" + n + " contract" + (n === 1 ? "" : "s") + " × " + money(o.premium) + ").";
+        var m = (o.entry > 0 && o.expiry) ? modelEst(o) : null;
+        if (m) {
+          txt += " Model estimate (Black-Scholes, vol " + Math.round(m.sigma * 100) +
+            "% implied by your premium, move over ~2 weeks): at the stock's target the " +
+            (jtype === "spread" ? "spread" : "contract") + " ≈ " + money(m.tp) +
+            " (" + pctTxt((m.tp / o.premium - 1) * 100) + ") · at the stop ≈ " + money(m.sl) +
+            " (" + pctTxt((m.sl / o.premium - 1) * 100) + "). A model, not a quote — real prices differ." +
+            " Exits still follow the stock: close the option when the stock hits its stop, its target, or day 40.";
+        } else {
+          txt += " Fill the stock entry, strike" + (jtype === "spread" ? "s" : "") +
+            " and expiry to see the model estimate.";
+        }
+        optNote.textContent = txt;
+      } else {
+        optNote.textContent = "Options math — fill the premium and contracts to see your max risk. " +
+          "The plan's exits stay on the stock: you close the option when the stock hits −8%, +8%, or day 40 — " +
+          "the option's own % is never the trigger.";
+      }
     }
   }
 
@@ -481,12 +622,40 @@
     if (e.status === "won") html += '<span class="tj-badge won">Won</span>';
     if (e.status === "lost") html += '<span class="tj-badge lost">Lost</span>';
     if (e.status === "time") html += '<span class="tj-badge time">Time exit</span>';
+    if (isOpt(e)) html += '<span class="tj-badge">' + (e.jtype === "call" ? "Call" : "Spread") + '</span>';
     if (typeof e.exitPrice === "number") {
       var pct = (e.exitPrice / e.entry - 1) * 100;
       html += '<span class="tj-nums">out ' + money(e.exitPrice) + ' (' + (pct >= 0 ? "+" : "") + pct.toFixed(1) + '%)</span>';
     }
     if (editable) html += '<button class="tj-btn danger tj-del" data-act="del" type="button">Delete</button>';
     html += '</div>';
+    if (isOpt(e)) {
+      var risk = (typeof e.premium === "number" && typeof e.contracts === "number") ? e.premium * e.contracts * 100 : null;
+      var ol = '<div class="tj-days">';
+      if (e.jtype === "call") {
+        ol += 'Call ' + money(e.strike || 0) + ' · exp ' + (e.expiry ? fmtDate(parseDate(e.expiry)) : "—");
+      } else {
+        ol += 'Spread buy ' + money(e.strike || 0) + ' / sell ' + money(e.strike2 || 0) + ' · exp ' + (e.expiry ? fmtDate(parseDate(e.expiry)) : "—");
+      }
+      if (typeof e.premium === "number") ol += ' · paid ' + money(e.premium) + (e.jtype === "spread" ? "/spread" : "/contract");
+      if (typeof e.contracts === "number") ol += ' · ' + e.contracts + ' contract' + (e.contracts === 1 ? "" : "s");
+      if (risk !== null) ol += ' · <strong>max risk ' + money(risk) + '</strong>';
+      ol += '</div>';
+      var mm0 = modelEst(e);
+      if (mm0 && typeof e.premium === "number" && e.premium > 0) {
+        ol += '<div class="tj-days">Model: at target ≈ ' + money(mm0.tp) + ' (' + pctTxt((mm0.tp / e.premium - 1) * 100) +
+          ') · at stop ≈ ' + money(mm0.sl) + ' (' + pctTxt((mm0.sl / e.premium - 1) * 100) +
+          ') — Black-Scholes estimate from your premium, not a quote</div>';
+      }
+      if (typeof e.exitPremium === "number" && typeof e.premium === "number" && e.premium > 0) {
+        var aR = (e.exitPremium - e.premium) / e.premium;
+        var pR = e.status === "won" ? 1 : e.status === "lost" ? -1 :
+          (typeof e.exitPrice === "number" ? (e.exitPrice / e.entry - 1) / 0.08 : null);
+        ol += '<div class="tj-days">Option out ' + money(e.exitPremium) + ' · actual ' + fmtR(aR) +
+          (pR !== null ? ' vs stock plan ' + fmtR(pR) + ' · vehicle difference ' + fmtR(aR - pR) : '') + '</div>';
+      }
+      html += ol;
+    }
     if (e.status === "active") {
       var left = daysLeft(e);
       var cls = barClass(Math.max(left, 0));
@@ -502,8 +671,10 @@
           '<button class="tj-btn" data-act="won" type="button">Hit TP ✓</button>' +
           '<button class="tj-btn" data-act="lost" type="button">Hit SL ✗</button>' +
           '<button class="tj-btn" data-act="time" type="button">Time exit</button></div>' +
-          '<div class="tj-close"><span class="tj-date">Exit price:</span>' +
-          '<input type="number" step="0.01" min="0" inputmode="decimal">' +
+          '<div class="tj-close"><span class="tj-date">' + (isOpt(e) ? "Stock exit:" : "Exit price:") + '</span>' +
+          '<input class="tj-xs" type="number" step="0.01" min="0" inputmode="decimal">' +
+          (isOpt(e) ? '<span class="tj-date">Option exit ($/contract):</span>' +
+            '<input class="tj-xo" type="number" step="0.01" min="0" inputmode="decimal">' : '') +
           '<button class="tj-btn" data-act="saveclose" type="button">Save</button>' +
           '<button class="tj-btn" data-act="cancelclose" type="button">Cancel</button></div>';
       }
@@ -520,13 +691,25 @@
           if (confirm("Delete " + e.ticker + " from the journal?")) onAction("delete", e, null);
         } else if (act === "won" || act === "lost" || act === "time") {
           pending = act;
-          var inp = closeBox.querySelector("input");
+          var inp = closeBox.querySelector(".tj-xs");
           inp.value = act === "won" ? (e.entry * 1.08).toFixed(2) : act === "lost" ? (e.entry * 0.92).toFixed(2) : e.entry.toFixed(2);
+          var oi = closeBox.querySelector(".tj-xo");
+          if (oi) {
+            var mm2 = modelEst(e);
+            oi.value = act === "won" && mm2 ? mm2.tp.toFixed(2) : act === "lost" && mm2 ? mm2.sl.toFixed(2) : "";
+          }
           closeBox.classList.add("open");
           inp.focus(); inp.select();
         } else if (act === "saveclose") {
-          var v = parseFloat(closeBox.querySelector("input").value);
-          onAction("close", e, { status: pending || "time", exitPrice: v > 0 ? v : null });
+          var v = parseFloat(closeBox.querySelector(".tj-xs").value);
+          var data = { status: pending || "time", exitPrice: v > 0 ? v : null };
+          var oi2 = closeBox.querySelector(".tj-xo");
+          if (oi2) {
+            var raw = oi2.value.trim();
+            var ov = raw === "" ? null : parseFloat(raw);
+            data.exitPremium = (ov !== null && ov >= 0) ? ov : null;
+          }
+          onAction("close", e, data);
         } else if (act === "cancelclose") {
           closeBox.classList.remove("open");
           pending = null;
@@ -554,7 +737,11 @@
       saveLocal(rows.filter(function (r) { return r.id !== e.id; }));
     } else if (act === "close") {
       rows.forEach(function (r) {
-        if (r.id === e.id) { r.status = data.status; if (data.exitPrice) r.exitPrice = data.exitPrice; }
+        if (r.id === e.id) {
+          r.status = data.status;
+          if (data.exitPrice) r.exitPrice = data.exitPrice;
+          if (data.exitPremium != null) r.exitPremium = data.exitPremium;
+        }
       });
       saveLocal(rows);
     }
@@ -563,7 +750,7 @@
   function serverAction(act, e, data) {
     var p = act === "delete"
       ? mutate({ action: "delete", id: e.id })
-      : mutate({ action: "close", id: e.id, status: data.status, exitPrice: data.exitPrice });
+      : mutate({ action: "close", id: e.id, status: data.status, exitPrice: data.exitPrice, exitPremium: data.exitPremium });
     p.then(fetchServer).catch(function (err) { alert(err.message); });
   }
 
@@ -640,9 +827,28 @@
       amount: parseFloat(amountEl.value) || null,
       status: "active", exitPrice: null, createdAt: Date.now()
     };
+    if (jtype !== "stock") {
+      var k1 = parseFloat(strikeEl.value), k2 = parseFloat(strike2El.value),
+          prem = parseFloat(premiumEl.value), n = parseInt(contractsEl.value, 10);
+      if (!k1 || k1 <= 0) { strikeEl.focus(); return; }
+      if (jtype === "spread" && (!k2 || k2 <= k1)) { alert("For a call spread, the sell strike must be above the buy strike."); strike2El.focus(); return; }
+      if (!expiryEl.value) { expiryEl.focus(); return; }
+      if (!prem || prem <= 0) { premiumEl.focus(); return; }
+      if (!n || n < 1) { contractsEl.focus(); return; }
+      entry.jtype = jtype;
+      entry.strike = k1;
+      if (jtype === "spread") entry.strike2 = k2;
+      entry.expiry = expiryEl.value;
+      entry.premium = prem;
+      entry.contracts = n;
+      entry.amount = Math.round(prem * n * 100 * 100) / 100;
+    }
     var after = function () {
       tickerEl.value = ""; entryEl.value = ""; amountEl.value = "";
+      strikeEl.value = ""; strike2El.value = ""; premiumEl.value = "";
+      contractsEl.value = ""; expiryEl.value = "";
       dateEl.value = todayLocal();
+      setType("stock");
       calc();
     };
     if (unlocked()) {
@@ -722,13 +928,23 @@
           }).catch(function (err) { alert(err.message); });
         } else {
           saveLocal(clean.map(function (r) {
-            return {
+            var out = {
               id: r.id || Date.now() + Math.random(), ticker: r.ticker, entry: r.entry,
               date: r.date, amount: typeof r.amount === "number" ? r.amount : null,
               status: ["active", "won", "lost", "time"].indexOf(r.status) >= 0 ? r.status : "active",
               exitPrice: typeof r.exitPrice === "number" ? r.exitPrice : null,
               createdAt: r.createdAt || Date.now()
             };
+            if (r.jtype === "call" || r.jtype === "spread") {
+              out.jtype = r.jtype;
+              ["strike", "strike2", "premium"].forEach(function (k) {
+                if (typeof r[k] === "number" && r[k] > 0) out[k] = r[k];
+              });
+              if (typeof r.expiry === "string" && r.expiry.length === 10) out.expiry = r.expiry;
+              if (typeof r.contracts === "number" && r.contracts > 0) out.contracts = Math.floor(r.contracts);
+              if (typeof r.exitPremium === "number" && r.exitPremium >= 0) out.exitPremium = r.exitPremium;
+            }
+            return out;
           }));
           alert("Journal restored: " + clean.length + " trades.");
           renderAll();
@@ -745,6 +961,13 @@
     el.addEventListener("input", calc);
     el.addEventListener("change", calc);
   });
+  [strikeEl, strike2El, expiryEl, premiumEl, contractsEl].forEach(function (el) {
+    el.addEventListener("input", calc);
+    el.addEventListener("change", calc);
+  });
+  $("tj-type-stock").addEventListener("click", function () { setType("stock"); });
+  $("tj-type-call").addEventListener("click", function () { setType("call"); });
+  $("tj-type-spread").addEventListener("click", function () { setType("spread"); });
   dateEl.value = todayLocal();
   $("tj-v-date").value = todayLocal();
   var edgeBtn = $("tj-edge-btn"), edgeBody = $("tj-edge-body");
