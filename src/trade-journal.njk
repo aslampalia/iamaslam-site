@@ -142,6 +142,36 @@
           <div class="tj-empty" id="tj-aslam-empty">Loading Aslam&rsquo;s journal&hellip;</div>
           <p class="tj-note">Aslam&rsquo;s journal lives on his own server — the same on his phone and his laptop. Everyone can watch it; only Aslam can write in it.</p>
         </div>
+
+        <div class="tj-jhead">
+          <h2>Veto log — trades the system called and Aslam skipped</h2>
+        </div>
+        <p class="tj-note">A veto is a trade the system pinged that Aslam decided not to take. Each veto is logged with the would-be entry (ticker, entry price, date, and his reason), and the log grades it automatically under the same −8% / +8% / 40-trading-day rules: if the skipped trade would have made money, the veto cost money; if it would have lost, the veto saved money. Still-open vetoes re-grade as prices move; finished grades are final.</p>
+        <div id="tj-veto-open" style="display:none">
+          <div class="tj-form">
+            <div class="tj-field">
+              <label for="tj-v-ticker">Ticker</label>
+              <input id="tj-v-ticker" type="text" placeholder="AAPL" autocomplete="off" style="text-transform: uppercase">
+            </div>
+            <div class="tj-field">
+              <label for="tj-v-entry">Entry price ($) the system called</label>
+              <input id="tj-v-entry" type="number" step="0.01" min="0" placeholder="100.00" inputmode="decimal">
+            </div>
+            <div class="tj-field">
+              <label for="tj-v-date">Signal date</label>
+              <input id="tj-v-date" type="date">
+            </div>
+            <div class="tj-field">
+              <label for="tj-v-reason">Reason he skipped it</label>
+              <input id="tj-v-reason" type="text" placeholder="e.g. earnings tomorrow" autocomplete="off">
+            </div>
+          </div>
+          <button class="btn btn-primary" id="tj-veto-add" type="button">Log veto</button>
+        </div>
+        <div class="tj-stats" id="tj-veto-stats"></div>
+        <div id="tj-veto-list"></div>
+        <div class="tj-empty" id="tj-veto-empty">Loading the veto log&hellip;</div>
+        <p class="tj-note">Verdict so far shows whether Aslam&rsquo;s vetoes, as a group, are making or costing money versus just taking every system trade. Net is per $1,000 position, summed over graded vetoes.</p>
       </div>
     </div>
   </section>
@@ -162,6 +192,8 @@
       aslamSec = $("tj-aslam-sec");
   var serverRows = null;
   var serverError = false;
+  var vetoData = null;
+  var vetoError = false;
 
   function pin() { return localStorage.getItem(PIN_KEY) || ""; }
   function unlocked() { return !!pin(); }
@@ -307,6 +339,87 @@
   }
 
   /* ---------- shared rendering ---------- */
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function renderVetoes() {
+    var listEl = $("tj-veto-list"), emptyEl = $("tj-veto-empty"), statsEl = $("tj-veto-stats");
+    $("tj-veto-open").style.display = unlocked() ? "block" : "none";
+    if (vetoError) {
+      statsEl.textContent = "";
+      listEl.innerHTML = "";
+      emptyEl.style.display = "block";
+      emptyEl.textContent = "The veto log could not load right now — try refreshing in a minute.";
+      return;
+    }
+    if (!vetoData) {
+      emptyEl.style.display = "block";
+      emptyEl.textContent = "Loading the veto log…";
+      return;
+    }
+    var rows = vetoData.vetoes || [], s = vetoData.summary || {};
+    emptyEl.style.display = rows.length === 0 ? "block" : "none";
+    if (rows.length === 0) emptyEl.textContent = "No vetoes yet — the first skipped trade will live here.";
+    if (!s.graded) {
+      statsEl.textContent = rows.length ? "No finished vetoes yet — grades appear once a skipped trade hits its stop, target, or the 40-day exit." : "";
+    } else {
+      var net = s.netPer1000;
+      statsEl.textContent = "Graded: " + s.graded +
+        " · veto saved money: " + s.saved +
+        " · veto cost money: " + s.cost +
+        " · net effect: " + (net >= 0 ? "+" : "−") + "$" + Math.abs(net).toLocaleString("en-US") +
+        " per $1,000 — vetoes are " + (net >= 0 ? "MAKING money" : "COSTING money") + " so far";
+    }
+    var sorted = rows.slice().sort(function (a, b) {
+      var ao = a.grade && a.grade.status === "open", bo = b.grade && b.grade.status === "open";
+      if (ao !== bo) return ao ? -1 : 1;
+      return (b.createdAt || 0) - (a.createdAt || 0);
+    });
+    listEl.innerHTML = "";
+    sorted.forEach(function (v) {
+      var card = document.createElement("div");
+      card.className = "tj-entry";
+      var html = '<div class="tj-row1">' +
+        '<span class="tj-tick">' + esc(v.ticker) + '</span>' +
+        '<span class="tj-nums">Vetoed entry ' + money(v.entry) + '</span>' +
+        '<span class="tj-date">signal ' + fmtDate(parseDate(v.date)) + '</span>' +
+        '<span class="tj-badge time">VETO</span>';
+      if (unlocked()) html += '<button class="tj-btn danger tj-del" data-vdel="' + v.id + '" type="button">Delete</button>';
+      html += '</div>';
+      if (v.reason) html += '<div class="tj-days">Reason: ' + esc(v.reason) + '</div>';
+      var g = v.grade || {};
+      if (g.status === "target") {
+        html += '<div class="tj-days"><span class="r">Would have WON +8.0%</span> · target hit ' + fmtDate(parseDate(g.exitDate)) + ' in ' + g.days + ' trading days · this veto cost $80 per $1,000</div>';
+      } else if (g.status === "stop") {
+        html += '<div class="tj-days"><span class="g">Would have LOST −8.0%</span> · stop hit ' + fmtDate(parseDate(g.exitDate)) + ' in ' + g.days + ' trading days · this veto saved $80 per $1,000</div>';
+      } else if (g.status === "timeout") {
+        var pctTxt = (g.resultPct >= 0 ? "+" : "−") + Math.abs(g.resultPct).toFixed(1) + "%";
+        var usd = "$" + Math.abs(Math.round(g.resultPct * 10)).toLocaleString("en-US");
+        html += '<div class="tj-days">Would have timed out at <span class="' + (g.resultPct >= 0 ? "r" : "g") + '">' + pctTxt + '</span> · exited ' + fmtDate(parseDate(g.exitDate)) + ' after 40 trading days · this veto ' + (g.resultPct >= 0 ? "cost " : "saved ") + usd + ' per $1,000</div>';
+      } else if (g.status === "open") {
+        html += '<div class="tj-days">Still open · ' + g.days + ' trading days in' +
+          (typeof g.resultPct === "number" ? ' · at ' + (g.resultPct >= 0 ? "+" : "−") + Math.abs(g.resultPct).toFixed(1) + '% if exited at the last close' : ' · no sessions yet since the signal') + '</div>';
+      } else {
+        html += '<div class="tj-days">Grade unavailable right now.</div>';
+      }
+      card.innerHTML = html;
+      listEl.appendChild(card);
+    });
+  }
+  function fetchVetoes() {
+    return fetch(API + "/vetoes").then(function (r) { return r.json(); }).then(function (data) {
+      vetoData = data;
+      vetoError = false;
+      renderVetoes();
+    }).catch(function () {
+      vetoData = null;
+      vetoError = true;
+      renderVetoes();
+    });
+  }
+
   function barClass(left) { return left <= 10 ? "r" : (left <= 20 ? "y" : "g"); }
 
   function statsText(rows) {
@@ -419,6 +532,7 @@
   }
 
   function renderAll() {
+    renderVetoes();
     var mine = unlocked() ? (serverRows || []) : loadLocal();
     lockBtn.textContent = unlocked() ? "Lock journal" : "I’m Aslam — unlock my journal";
     mineTitle.textContent = unlocked() ? "Aslam’s journal · unlocked" : "Your journal · this device";
@@ -507,6 +621,37 @@
     }
   });
 
+  /* ---------- veto log actions ---------- */
+  $("tj-veto-add").addEventListener("click", function () {
+    var tEl = $("tj-v-ticker"), eEl = $("tj-v-entry"), dEl = $("tj-v-date"), rEl = $("tj-v-reason");
+    var t = tEl.value.trim().toUpperCase();
+    var p = parseFloat(eEl.value);
+    if (!unlocked()) { alert("Unlock Aslam’s journal first — vetoes are written with the same PIN."); return; }
+    if (!t) { tEl.focus(); return; }
+    if (!p || p <= 0) { eEl.focus(); return; }
+    var veto = {
+      id: Date.now(), ticker: t, entry: p,
+      date: dEl.value || todayLocal(),
+      reason: rEl.value.trim(),
+      createdAt: Date.now()
+    };
+    mutate({ action: "veto_add", veto: veto }).then(function () {
+      tEl.value = ""; eEl.value = ""; rEl.value = "";
+      dEl.value = todayLocal();
+      fetchVetoes();
+    }).catch(function (err) { alert(err.message); });
+  });
+  $("tj-veto-list").addEventListener("click", function (ev) {
+    var btn = ev.target.closest("button[data-vdel]");
+    if (!btn) return;
+    var id = Number(btn.getAttribute("data-vdel"));
+    var row = (vetoData && vetoData.vetoes || []).filter(function (v) { return v.id === id; })[0];
+    if (!row) return;
+    if (!confirm("Delete the " + row.ticker + " veto from the log?")) return;
+    mutate({ action: "veto_delete", id: id }).then(fetchVetoes)
+      .catch(function (err) { alert(err.message); });
+  });
+
   /* ---------- backup / restore (acts on the journal you are looking at) ---------- */
   function currentRows() { return unlocked() ? (serverRows || []) : loadLocal(); }
   $("tj-export").addEventListener("click", function () {
@@ -565,9 +710,11 @@
     el.addEventListener("change", calc);
   });
   dateEl.value = todayLocal();
+  $("tj-v-date").value = todayLocal();
   calc();
   renderAll();
   fetchServer();
+  fetchVetoes();
 })();
 </script>
 {% endblock %}
