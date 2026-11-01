@@ -147,6 +147,7 @@
           <h2>Veto log — trades the system called and Aslam skipped</h2>
         </div>
         <p class="tj-note">A veto is a trade the system pinged that Aslam decided not to take. Each veto is logged with the would-be entry (ticker, entry price, date, and his reason), and the log grades it automatically under the same −8% / +8% / 40-trading-day rules: if the skipped trade would have made money, the veto cost money; if it would have lost, the veto saved money. Still-open vetoes re-grade as prices move; finished grades are final.</p>
+        <p class="tj-note" id="tj-veto-hint"><strong>Want to log a veto?</strong> First tap &ldquo;I&rsquo;m Aslam — unlock my journal&rdquo; at the top of this page and enter your PIN — the log form then appears right here. Same PIN as your journal.</p>
         <div id="tj-veto-open" style="display:none">
           <div class="tj-form">
             <div class="tj-field">
@@ -347,6 +348,7 @@
   function renderVetoes() {
     var listEl = $("tj-veto-list"), emptyEl = $("tj-veto-empty"), statsEl = $("tj-veto-stats");
     $("tj-veto-open").style.display = unlocked() ? "block" : "none";
+    $("tj-veto-hint").style.display = unlocked() ? "none" : "block";
     if (vetoError) {
       statsEl.textContent = "";
       listEl.innerHTML = "";
