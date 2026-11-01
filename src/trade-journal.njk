@@ -121,6 +121,40 @@
           <p class="tj-note">Rules from the backtest: buy the retest, risk 8%, take 8%, and if the trade goes nowhere, out after 40 trading days. Trading days = days the US market is open: weekends and market holidays (New Year, MLK Day, Presidents Day, Good Friday, Memorial Day, Juneteenth, Independence Day, Labor Day, Thanksgiving, Christmas) do not count toward the 40. Where the trade lands depends on the mode below: your device journal, or Aslam&rsquo;s journal when he is unlocked.</p>
         </div>
 
+        <div class="tj-card">
+          <button class="btn btn-primary" id="tj-edge-btn" type="button" style="width:100%">&#128200; Our trading edge &mdash; click here to read</button>
+          <div id="tj-edge-body" style="display:none">
+            <h3 style="font-family:var(--font-display);font-weight:800;font-size:1.25rem;margin:1.1rem 0 0.2rem">The setup: the Magic Setup</h3>
+            <p class="tj-note">A stock coiling under a falling resistance line it has tested at least 3 times over 6 to 10 weeks, while holding above its flat or rising 200-day average. The 6-day and 21-day averages pinch together, RSI sits between 40 and 55, and volume dries up: calm compression under pressure, over a rising floor. A daily close above the line is the trigger.</p>
+            <h3 style="font-family:var(--font-display);font-weight:800;font-size:1.25rem;margin:1.1rem 0 0.2rem">The entry: wait for the retest</h3>
+            <p class="tj-note">We never chase the trigger. Within 20 trading days, most triggered stocks dip back to the line they broke, touch it, and close back above it &mdash; that close is the entry. On the same 499 trades over five years, entering at the trigger averaged +0.84% per trade; entering at the retest averaged +1.57%. Same stocks, same exits.</p>
+            <h3 style="font-family:var(--font-display);font-weight:800;font-size:1.25rem;margin:1.1rem 0 0.2rem">The exits: fixed and mechanical</h3>
+            <p class="tj-note">Stop at &minus;8%, target at +8%, and out at 40 trading days whatever the price is. No trailing stops, no early exits, no opinions mid-trade.</p>
+            <h3 style="font-family:var(--font-display);font-weight:800;font-size:1.25rem;margin:1.1rem 0 0.2rem">The evidence: five years, 499 trades (Oct 2021 &ndash; Oct 2026)</h3>
+            <p class="tj-note">Stocks at real prices: 499 retest trades, 60% positive (249 hit target, 154 stopped out, 96 timed out), average +1.57% per trade, and a flat $1,000 on every trade returned +$7,849 with no losing year &mdash; including the 2022 bear market. The rules above are the whole system; tighter bands, shorter holds, trailing stops and shorting the mirror image were all tested on the same data and all made it worse.</p>
+            <h3 style="font-family:var(--font-display);font-weight:800;font-size:1.25rem;margin:1.1rem 0 0.2rem">The options version: $10,000 simulations</h3>
+            <p class="tj-note">Same signals and exits, traded with ~90-day at-the-money calls, or as call spreads (buy the at-the-money call, sell the call 8% higher) &mdash; the spread is the version sized for small accounts, because it roughly halves the ticket and caps the loss at the amount paid. Simulated on the real sequence of the same 499 trades, in date order, $10,000 starting capital:</p>
+            <div class="tj-outs">
+              <div class="tj-out tp">
+                <div class="k">Stocks &middot; real prices</div>
+                <div class="v">+83.6%</div>
+                <div class="s">$10,000 &rarr; $18,358 &middot; 8 slots of $1,250 &middot; worst dip &minus;12.1%</div>
+              </div>
+              <div class="tj-out tm">
+                <div class="k">Call spreads &middot; modeled</div>
+                <div class="v">+633.8%</div>
+                <div class="s">$10,000 &rarr; $73,377 &middot; 4 slots of $2,500 &middot; worst dip &minus;36.1%</div>
+              </div>
+              <div class="tj-out sl">
+                <div class="k">Naked calls &middot; modeled</div>
+                <div class="v">+680.7%</div>
+                <div class="s">$10,000 &rarr; $78,067 &middot; 8 slots of $1,250 &middot; worst dip &minus;47.1%</div>
+              </div>
+            </div>
+            <p class="tj-note">Read the labels. The stock numbers come from real market prices. The options numbers are simulations priced with the Black-Scholes model &mdash; volatility held at its entry level and no bid-ask spread charged &mdash; so treat them as a best-case sketch, not a promise: real fills cost the spread on every trade, slow trades bleed time value, and the worst dips above are deeper than the stock version&rsquo;s. A simulation of the last five years is evidence about a system, never a guarantee about the next five.</p>
+          </div>
+        </div>
+
         <div class="tj-jhead">
           <h2 id="tj-mine-title">Your journal · this device</h2>
           <button class="tj-btn" id="tj-lock" type="button">I&rsquo;m Aslam — unlock my journal</button>
@@ -713,6 +747,14 @@
   });
   dateEl.value = todayLocal();
   $("tj-v-date").value = todayLocal();
+  var edgeBtn = $("tj-edge-btn"), edgeBody = $("tj-edge-body");
+  edgeBtn.addEventListener("click", function () {
+    var open = edgeBody.style.display !== "none";
+    edgeBody.style.display = open ? "none" : "block";
+    edgeBtn.innerHTML = open
+      ? "&#128200; Our trading edge &mdash; click here to read"
+      : "&#128200; Our trading edge &mdash; click to hide";
+  });
   calc();
   renderAll();
   fetchServer();
