@@ -700,7 +700,7 @@
       }
       if (e._watch) {
         var w = e._watch;
-        html += '<div class="tj-days">&#128225; Last close ' + money(w.lastClose) + ' <span class="tj-date">(' + fmtDate(parseDate(w.lastDate)) + ')</span> · ' +
+        html += '<div class="tj-days">&#128225; ' + (w.live ? 'Live ' : 'Last close ') + money(w.lastClose) + ' <span class="tj-date">(' + fmtDate(parseDate(w.lastDate)) + ')</span> · ' +
           (w.pctNow >= 0 ? '+' : '') + w.pctNow.toFixed(1) + '% from entry · ' + w.toStopPct.toFixed(1) + '% above the stop · ' + w.toTargetPct.toFixed(1) + '% to the target</div>';
         if (w.state === "target") html += '<div class="tj-days"><span class="g">&#127919; Target touched on ' + fmtDate(parseDate(w.hitDate)) + ' — the plan says this trade is done</span></div>';
         if (w.state === "stop") html += '<div class="tj-days"><span class="r">&#128308; Stop touched on ' + fmtDate(parseDate(w.hitDate)) + ' — the plan says this trade is done</span></div>';
