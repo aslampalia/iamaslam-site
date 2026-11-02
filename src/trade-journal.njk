@@ -26,8 +26,8 @@
     .tj-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
     @media (max-width: 560px) { .tj-form { grid-template-columns: 1fr; } }
     .tj-field label { display: block; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-70); margin-bottom: 0.35rem; }
-    .tj-field input { width: 100%; box-sizing: border-box; font-family: var(--font-mono); font-size: 1.15rem; font-weight: 700; padding: 0.6rem 0.7rem; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); border-radius: 0; }
-    .tj-field input:focus { outline: 3px solid var(--lime); outline-offset: 1px; }
+    .tj-field input, .tj-field select { width: 100%; box-sizing: border-box; font-family: var(--font-mono); font-size: 1.15rem; font-weight: 700; padding: 0.6rem 0.7rem; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); border-radius: 0; }
+    .tj-field input:focus, .tj-field select:focus { outline: 3px solid var(--lime); outline-offset: 1px; }
     .tj-outs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.9rem; margin-top: 1.1rem; }
     @media (max-width: 560px) { .tj-outs { grid-template-columns: 1fr; } }
     .tj-out { border: 2px solid var(--ink); padding: 0.7rem 0.8rem; background: var(--paper); }
@@ -40,6 +40,11 @@
     .tj-add { margin-top: 1.1rem; width: 100%; }
     .tj-note { font-size: 0.85rem; color: var(--ink-70); margin-top: 0.8rem; }
     .tj-stats { display: flex; flex-wrap: wrap; gap: 0.5rem 1.2rem; font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem; }
+    .tj-score { background: #fff; border: 2px solid var(--ink); box-shadow: var(--shadow-sm); padding: 0.7rem 0.9rem; margin-bottom: 1rem; font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; }
+    .tj-score:empty { display: none; }
+    .tj-score .hd { font-family: var(--font-display); font-size: 1.05rem; margin-bottom: 0.35rem; }
+    .tj-score div { margin: 0.18rem 0; }
+    .tj-score .dim { color: var(--ink-70); font-weight: 400; }
     .tj-entry { background: #fff; border: 2px solid var(--ink); box-shadow: var(--shadow-sm); padding: 0.8rem 0.9rem; margin-bottom: 0.9rem; }
     .tj-row1 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem 0.9rem; }
     .tj-tick { font-family: var(--font-display); font-weight: 800; font-size: 1.45rem; letter-spacing: -0.02em; }
@@ -107,6 +112,15 @@
             <div class="tj-field" id="tj-f-amount">
               <label for="tj-amount">Position size ($) — optional</label>
               <input id="tj-amount" type="number" step="1" min="0" placeholder="1000" inputmode="decimal">
+            </div>
+            <div class="tj-field">
+              <label for="tj-cls">Setup class (for the scoreboard)</label>
+              <select id="tj-cls">
+                <option value="">— not tagged —</option>
+                <option value="allfour">&#11088; ALL FOUR — magic + retest + S1 + S2</option>
+                <option value="two">Magic setup + retest only (2 of 4)</option>
+                <option value="other">Not a system trade</option>
+              </select>
             </div>
             <div class="tj-field" id="tj-f-strike" style="display:none">
               <label for="tj-strike" id="tj-lbl-strike">Call strike ($)</label>
@@ -196,6 +210,7 @@
           <input type="file" id="tj-file" accept=".json,application/json" style="display:none">
         </div>
         <div class="tj-stats" id="tj-stats"></div>
+        <div class="tj-score" id="tj-score-mine"></div>
         <div id="tj-list"></div>
         <div class="tj-empty" id="tj-empty">No trades logged yet. Your first trade will live here.</div>
         <p class="tj-note" id="tj-mine-note">Your journal is saved in this browser on this device only — nobody else can see it, and nothing is uploaded. Switching devices? Download a backup here, then restore it on the new device.</p>
@@ -205,6 +220,7 @@
             <h2>Aslam&rsquo;s journal · live</h2>
           </div>
           <div class="tj-stats" id="tj-aslam-stats"></div>
+          <div class="tj-score" id="tj-score"></div>
           <div id="tj-aslam-list"></div>
           <div class="tj-empty" id="tj-aslam-empty">Loading Aslam&rsquo;s journal&hellip;</div>
           <p class="tj-note">Aslam&rsquo;s journal lives on his own server — the same on his phone and his laptop. Everyone can watch it; only Aslam can write in it.</p>
@@ -257,11 +273,12 @@
       tmEl = $("tj-tm"), slSub = $("tj-sl-sub"), tpSub = $("tj-tp-sub"),
       tmSub = $("tj-tm-sub"), lockBtn = $("tj-lock"),
       mineTitle = $("tj-mine-title"), mineNote = $("tj-mine-note"),
-      aslamSec = $("tj-aslam-sec");
+      aslamSec = $("tj-aslam-sec"), clsEl = $("tj-cls");
   var serverRows = null;
   var serverError = false;
   var vetoData = null;
   var vetoError = false;
+  var watchMap = {};
   var jtype = "stock";
   var strikeEl = $("tj-strike"), strike2El = $("tj-strike2"),
       expiryEl = $("tj-expiry"), premiumEl = $("tj-premium"),
@@ -491,11 +508,22 @@
       serverRows = Array.isArray(data.entries) ? data.entries : [];
       serverError = false;
       renderAll();
+      fetchStatus();
     }).catch(function () {
       serverRows = null;
       serverError = true;
       renderAll();
     });
+  }
+  function fetchStatus() {
+    return fetch(API + "/status").then(function (r) { return r.json(); }).then(function (data) {
+      watchMap = (data && data.statuses) || {};
+      (serverRows || []).forEach(function (e) {
+        var w = watchMap[String(e.id)];
+        if (w) e._watch = w; else if (e._watch) delete e._watch;
+      });
+      renderAll();
+    }).catch(function () { /* the watch is a bonus layer; the journal renders without it */ });
   }
   function mutate(payload) {
     payload.pin = pin();
@@ -625,6 +653,8 @@
     if (e.status === "lost") html += '<span class="tj-badge lost">Lost</span>';
     if (e.status === "time") html += '<span class="tj-badge time">Time exit</span>';
     if (isOpt(e)) html += '<span class="tj-badge">' + (e.jtype === "call" ? "Call" : "Spread") + '</span>';
+    if (e.cls === "allfour") html += '<span class="tj-badge">&#11088; ALL FOUR</span>';
+    else if (e.cls === "two") html += '<span class="tj-badge">2 of 4</span>';
     if (typeof e.exitPrice === "number") {
       var pct = (e.exitPrice / e.entry - 1) * 100;
       html += '<span class="tj-nums">out ' + money(e.exitPrice) + ' (' + (pct >= 0 ? "+" : "") + pct.toFixed(1) + '%)</span>';
@@ -667,6 +697,14 @@
         html += '<div class="tj-days"><span class="' + cls + '">' + left + ' trading day' + (left === 1 ? "" : "s") + ' left</span> · time exit ' + fmtDate(exitBy) + '</div>';
       } else {
         html += '<div class="tj-days"><span class="r">TIME UP — exit this trade</span> · 40 trading days passed on ' + fmtDate(exitBy) + '</div>';
+      }
+      if (e._watch) {
+        var w = e._watch;
+        html += '<div class="tj-days">&#128225; Last close ' + money(w.lastClose) + ' <span class="tj-date">(' + fmtDate(parseDate(w.lastDate)) + ')</span> · ' +
+          (w.pctNow >= 0 ? '+' : '') + w.pctNow.toFixed(1) + '% from entry · ' + w.toStopPct.toFixed(1) + '% above the stop · ' + w.toTargetPct.toFixed(1) + '% to the target</div>';
+        if (w.state === "target") html += '<div class="tj-days"><span class="g">&#127919; Target touched on ' + fmtDate(parseDate(w.hitDate)) + ' — the plan says this trade is done</span></div>';
+        if (w.state === "stop") html += '<div class="tj-days"><span class="r">&#128308; Stop touched on ' + fmtDate(parseDate(w.hitDate)) + ' — the plan says this trade is done</span></div>';
+        if (w.earnings) html += '<div class="tj-days">&#9888;&#65039; Earnings ' + fmtDate(parseDate(w.earnings.date)) + (w.earnings.when ? ' (' + w.earnings.when + ')' : '') + ' — inside this trade&rsquo;s hold</div>';
       }
       if (editable) {
         html += '<div class="tj-actions">' +
@@ -756,6 +794,73 @@
     p.then(fetchServer).catch(function (err) { alert(err.message); });
   }
 
+  /* ---------- scoreboard: live record vs the backtest ---------- */
+  var BT = {
+    all: { win: 60, r: 0.20, stop: 31, n: 499 },
+    allfour: { win: 70, r: 0.39, stop: 21, n: 130 },
+    two: { win: 57, r: 0.13, stop: 34, n: 369 }
+  };
+  function tradeMetrics(e) {
+    var planR = e.status === "won" ? 1 : e.status === "lost" ? -1 :
+      (typeof e.exitPrice === "number" && e.entry > 0 ? (e.exitPrice / e.entry - 1) / 0.08 : null);
+    var pnl = null, r = planR, win = null;
+    if (isOpt(e) && typeof e.premium === "number" && e.premium > 0 &&
+        typeof e.contracts === "number" && typeof e.exitPremium === "number") {
+      pnl = (e.exitPremium - e.premium) * e.contracts * 100;
+      r = (e.exitPremium - e.premium) / e.premium;
+      win = pnl > 0;
+    } else if (typeof e.amount === "number" && typeof e.exitPrice === "number" && e.entry > 0) {
+      pnl = (e.exitPrice / e.entry - 1) * e.amount;
+      win = pnl > 0;
+    }
+    if (win === null) win = planR !== null ? planR > 0 : e.status === "won";
+    return { pnl: pnl, r: r, win: win, stop: e.status === "lost" };
+  }
+  function scoreGroup(rows) {
+    var n = rows.length, wins = 0, stops = 0, rSum = 0, rN = 0, pnl = 0, pnlN = 0;
+    rows.forEach(function (e) {
+      var m = tradeMetrics(e);
+      if (m.win) wins++;
+      if (m.stop) stops++;
+      if (m.r !== null) { rSum += m.r; rN++; }
+      if (m.pnl !== null) { pnl += m.pnl; pnlN++; }
+    });
+    return { n: n, win: n ? Math.round(wins / n * 100) : null,
+      avgR: rN ? rSum / rN : null, stop: n ? Math.round(stops / n * 100) : null,
+      pnl: pnlN ? pnl : null };
+  }
+  function scoreLine(label, g, bt) {
+    if (g.n === 0) return '<div>' + label + ' — no closed trades yet' +
+      (bt ? ' <span class="dim">· backtest: ' + bt.win + '% win · ' + fmtR(bt.r) + ' avg · ' + bt.stop + '% stops (' + bt.n + ' trades)</span>' : '') + '</div>';
+    var s = '<div>' + label + ' — ' + g.n + ' closed · win ' + g.win + '%' +
+      (g.avgR !== null ? ' · avg ' + fmtR(g.avgR) : '') + ' · stops ' + g.stop + '%' +
+      (g.pnl !== null ? ' · P&amp;L ' + (g.pnl >= 0 ? '+' : '-') + '$' + Math.abs(Math.round(g.pnl)) : '');
+    if (bt) s += ' <span class="dim">vs backtest ' + bt.win + '% · ' + fmtR(bt.r) + ' · ' + bt.stop + '% stops</span>';
+    return s + '</div>';
+  }
+  function scoreHTML(rows) {
+    var closed = rows.filter(function (e) { return e.status !== "active"; });
+    var open = rows.length - closed.length;
+    var h = '<div class="hd">&#128202; Scoreboard — my live record vs the backtest</div>';
+    if (closed.length === 0) {
+      return h + '<div>No closed trades yet — when a trade closes, this board grades it against the 499-trade backtest. The number that matters most: the &#11088; ALL FOUR stop rate — 21% in the backtest. If live trades stop out much more often than that, the tag is not real.</div>' +
+        '<div class="dim">Open trades: ' + open + ' · R = one plan risk (the 8% on a stock trade, the premium on an option trade)</div>';
+    }
+    var all = scoreGroup(closed);
+    var g4 = scoreGroup(closed.filter(function (e) { return e.cls === "allfour"; }));
+    var g2 = scoreGroup(closed.filter(function (e) { return e.cls === "two"; }));
+    var go = scoreGroup(closed.filter(function (e) { return e.cls === "other"; }));
+    var un = closed.filter(function (e) { return !e.cls; }).length;
+    h += scoreLine('All trades', all, BT.all);
+    h += scoreLine('&#11088; ALL FOUR', g4, BT.allfour);
+    h += scoreLine('Magic + retest (2 of 4)', g2, BT.two);
+    if (go.n) h += scoreLine('Not system trades', go, null);
+    h += '<div class="dim">Open trades: ' + open + ' · R = one plan risk (8% stock / premium on options)' +
+      (un ? ' · ' + un + ' closed trade' + (un === 1 ? '' : 's') + ' not class-tagged (in All trades only)' : '') +
+      (closed.length < 30 ? ' · Early days — judge this board after 30+ closed trades' : '') + '</div>';
+    return h;
+  }
+
   function renderAll() {
     renderVetoes();
     var mine = unlocked() ? (serverRows || []) : loadLocal();
@@ -769,6 +874,8 @@
       unlocked() ? serverAction : localAction,
       unlocked() ? "No trades logged yet. Your first trade will live here." : "No trades logged yet. Your first trade will live here.");
     aslamSec.style.display = unlocked() ? "none" : "block";
+    $("tj-score-mine").innerHTML = unlocked() ? (serverRows ? scoreHTML(serverRows) : "") : "";
+    $("tj-score").innerHTML = unlocked() ? "" : ((serverRows && !serverError) ? scoreHTML(serverRows) : "");
     if (!unlocked()) {
       var aEmpty = $("tj-aslam-empty");
       if (serverError) {
@@ -829,6 +936,7 @@
       amount: parseFloat(amountEl.value) || null,
       status: "active", exitPrice: null, createdAt: Date.now()
     };
+    if (clsEl.value) entry.cls = clsEl.value;
     if (jtype !== "stock") {
       var k1 = parseFloat(strikeEl.value), k2 = parseFloat(strike2El.value),
           prem = parseFloat(premiumEl.value), n = parseInt(contractsEl.value, 10);
@@ -849,6 +957,7 @@
       tickerEl.value = ""; entryEl.value = ""; amountEl.value = "";
       strikeEl.value = ""; strike2El.value = ""; premiumEl.value = "";
       contractsEl.value = ""; expiryEl.value = "";
+      clsEl.value = "";
       dateEl.value = todayLocal();
       setType("stock");
       calc();
@@ -946,6 +1055,7 @@
               if (typeof r.contracts === "number" && r.contracts > 0) out.contracts = Math.floor(r.contracts);
               if (typeof r.exitPremium === "number" && r.exitPremium >= 0) out.exitPremium = r.exitPremium;
             }
+            if (["allfour", "two", "other"].indexOf(r.cls) >= 0) out.cls = r.cls;
             return out;
           }));
           alert("Journal restored: " + clean.length + " trades.");
