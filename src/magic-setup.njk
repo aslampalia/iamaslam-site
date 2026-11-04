@@ -1,0 +1,334 @@
+{% set root = "../" %}
+{% set toTop = "#main" %}
+{% extends "base.njk" %}
+
+{% block head %}
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>The Magic Setup — Aslam</title>
+  <meta name="description" content="The Magic Setup: Aslam's 8-rule swing pattern, explained with an interactive chart. A descending-resistance coil above the 200-day line, a close above the line as the trigger, and a close below the 200-day as the kill switch. Education only.">
+  <link rel="canonical" href="https://iamaslam.com/magic-setup/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Aslam">
+  <meta property="og:title" content="The Magic Setup — Aslam">
+  <meta property="og:description" content="An 8-rule chart pattern, drawn step by step: coil, squeeze, trigger, trap, kill switch.">
+  <meta property="og:url" content="https://iamaslam.com/magic-setup/">
+  <meta name="theme-color" content="#FFFCF7">
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter+Tight:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@300..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .ms-wrap { max-width: 960px; margin: 0 auto; }
+    .ms-title { font-family: var(--font-display); font-weight: 800; font-size: clamp(2.5rem, 6.5vw, 4.4rem); line-height: 0.98; letter-spacing: -0.01em; margin: 0 0 1.1rem; }
+    .ms-title .mark { background: var(--lime); padding: 0 0.12em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+    .ms-stage-card { background: #fff; border: 2px solid var(--ink); box-shadow: var(--shadow); padding: 1rem 1rem 1.1rem; margin-bottom: 1.4rem; position: relative; }
+    .ms-stage-head { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; }
+    .ms-stage-tag { font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; background: var(--sun-soft); border: 2px solid var(--ink); padding: 0.25rem 0.55rem; }
+    .ms-stage-note { font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-45); text-transform: uppercase; letter-spacing: 0.1em; }
+    #ms-svg { width: 100%; height: auto; display: block; }
+    #ms-svg .lbl { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; }
+    #ms-svg .grp { transition: opacity 0.55s ease; }
+    .ms-stamp { position: absolute; font-family: var(--font-mono); font-weight: 700; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; border: 2px solid var(--ink); padding: 0.35rem 0.6rem; box-shadow: var(--shadow-sm); opacity: 0; transform: rotate(-4deg) scale(0.8); transition: opacity 0.3s ease, transform 0.3s ease; pointer-events: none; }
+    .ms-stamp.on { opacity: 1; transform: rotate(-4deg) scale(1); }
+    .ms-stamp-trig { background: var(--lime); right: 6%; top: 12%; }
+    .ms-stamp-dead { background: #FFD9D4; right: 6%; bottom: 30%; transform: rotate(3deg) scale(0.8); }
+    .ms-stamp-dead.on { transform: rotate(3deg) scale(1); }
+    .ms-cap { border: 2px solid var(--ink); background: var(--paper); padding: 1rem 1.1rem; margin-bottom: 1.1rem; min-height: 7.2rem; }
+    .ms-cap .k { font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; color: var(--cobalt); }
+    .ms-cap h3 { font-family: var(--font-display); font-weight: 800; font-size: 1.45rem; margin: 0.3rem 0 0.35rem; }
+    .ms-cap p { margin: 0; color: var(--ink-70); font-size: 1.02rem; line-height: 1.45; max-width: 44rem; }
+    .ms-controls { display: flex; flex-wrap: wrap; gap: 0.7rem; align-items: center; }
+    .ms-dots { display: flex; gap: 0.45rem; margin-left: auto; }
+    .ms-dot { width: 2rem; height: 2rem; border: 2px solid var(--ink); background: #fff; font-family: var(--font-mono); font-weight: 700; font-size: 0.8rem; cursor: pointer; padding: 0; }
+    .ms-dot.on { background: var(--ink); color: var(--paper); }
+    .ms-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; }
+    @media (max-width: 640px) { .ms-grid { grid-template-columns: 1fr; } }
+    .ms-rule { background: #fff; border: 2px solid var(--ink); box-shadow: var(--shadow-sm); padding: 1rem 1.05rem 1.05rem; }
+    .ms-rule .num { display: inline-block; font-family: var(--font-mono); font-weight: 700; font-size: 0.8rem; border: 2px solid var(--ink); padding: 0.15rem 0.5rem; margin-bottom: 0.6rem; }
+    .ms-rule h3 { font-family: var(--font-display); font-weight: 800; font-size: 1.2rem; margin: 0 0 0.35rem; }
+    .ms-rule p { margin: 0; color: var(--ink-70); line-height: 1.45; }
+    .ms-trio { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.1rem; }
+    @media (max-width: 760px) { .ms-trio { grid-template-columns: 1fr; } }
+    .ms-mini { border: 2px solid var(--ink); background: var(--paper); padding: 1rem 1.05rem; }
+    .ms-mini h3 { font-family: var(--font-display); font-weight: 800; font-size: 1.15rem; margin: 0 0 0.4rem; }
+    .ms-mini p { margin: 0; color: var(--ink-70); line-height: 1.45; }
+    .ms-note { border: 2px solid var(--ink); background: var(--sun-soft); box-shadow: var(--shadow-sm); padding: 1.05rem 1.15rem; }
+    .ms-note h3 { font-family: var(--font-display); font-weight: 800; margin: 0 0 0.4rem; font-size: 1.2rem; }
+    .ms-note p { margin: 0; line-height: 1.5; color: var(--ink-70); }
+    .ms-note p strong { color: var(--ink); }
+  </style>
+</head>
+{% endblock %}
+
+{% block content %}
+<main id="main">
+  <section class="hero" aria-label="The Magic Setup">
+    <div class="container hero-inner ms-wrap">
+      <p class="hero-pill"><span class="pdot" aria-hidden="true"></span>My trading system</p>
+      <h1 class="ms-title">The <span class="mark">Magic Setup</span></h1>
+      <p class="hero-sub">One chart pattern. Eight rules. A stock coils quietly under a falling ceiling, squeezes tighter and tighter — and only earns my attention when it <strong>closes above the line</strong>. Press play and watch it form.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top: 0;" aria-label="Interactive pattern chart">
+    <div class="container ms-wrap">
+      <div class="ms-stage-card">
+        <div class="ms-stage-head">
+          <span class="ms-stage-tag">The pattern, drawn</span>
+          <span class="ms-stage-note">Illustration — not a real stock</span>
+        </div>
+        <svg id="ms-svg" viewBox="0 0 920 600" role="img" aria-label="Animated chart showing a stock coiling under a descending resistance line above its 200-day average, then breaking out"></svg>
+        <span class="ms-stamp ms-stamp-trig" id="stamp-trig">Trigger — close above the line</span>
+        <span class="ms-stamp ms-stamp-dead" id="stamp-dead">Dead — close under the 200-day</span>
+      </div>
+
+      <div class="ms-cap" aria-live="polite">
+        <span class="k" id="ms-step-k">Step 1 of 6</span>
+        <h3 id="ms-step-t">Start with the ground</h3>
+        <p id="ms-step-p">Price has to live above a flat or rising 200-day average. That line is the ground the whole pattern stands on. Under it, there is no setup — I do not even look.</p>
+      </div>
+
+      <div class="ms-controls">
+        <button class="btn btn-ghost btn-sm" id="ms-prev" type="button">← Back</button>
+        <button class="btn btn-primary btn-sm" id="ms-play" type="button">▶ Play the pattern</button>
+        <button class="btn btn-ghost btn-sm" id="ms-next" type="button">Next →</button>
+        <div class="ms-dots" id="ms-dots" role="tablist" aria-label="Steps"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top: 1rem;" aria-label="The eight rules">
+    <div class="container ms-wrap">
+      <div class="sec-head">
+        <p class="eyebrow">The rulebook</p>
+        <h2 style="font-family: var(--font-display); font-weight: 800; font-size: clamp(1.9rem, 4.5vw, 2.8rem); margin: 0;">Eight rules. No exceptions.</h2>
+      </div>
+      <div class="ms-grid">
+        <article class="ms-rule"><span class="num" style="background: var(--cobalt-soft);">RULE 1</span><h3>The coil</h3><p>A resistance line slopes <em>down</em> over the price, and price touches it at least three times over six to ten weeks. A lid, being lowered slowly.</p></article>
+        <article class="ms-rule"><span class="num" style="background: var(--violet-soft);">RULE 2</span><h3>The ground</h3><p>The whole coil forms <em>above</em> a flat or rising 200-day average. Strong ground only — no setups built on a falling stock.</p></article>
+        <article class="ms-rule"><span class="num" style="background: var(--teal-soft);">RULE 3</span><h3>The pinch</h3><p>The fast 6-day average squeezes into the 21-day average. Two lines, one small space. Compression is the fuel.</p></article>
+        <article class="ms-rule"><span class="num" style="background: var(--sun-soft);">RULE 4</span><h3>The cool-down</h3><p>RSI (14) rests between 40 and 55 while the coil tightens. Not hot, not dead. Just loaded.</p></article>
+        <article class="ms-rule"><span class="num" style="background: var(--lime-soft);">RULE 5</span><h3>The quiet</h3><p>Volume contracts as the coil tightens. Nobody is rushing for the exit — energy is being stored, not spent.</p></article>
+        <article class="ms-rule"><span class="num" style="background: var(--lime);">RULE 6</span><h3>The trigger</h3><p>A <strong>daily close above the line</strong>. That is the only trigger. Not a wick, not a spike, not a feeling — a close.</p></article>
+        <article class="ms-rule"><span class="num" style="background: #FFD9D4;">RULE 7</span><h3>The kill switch</h3><p>A daily close <em>below</em> the 200-day average ends the setup completely. It does not matter how pretty the coil was.</p></article>
+        <article class="ms-rule"><span class="num" style="background: var(--flame-soft);">RULE 8</span><h3>The trap</h3><p>Price pokes above the line during the day but closes back under it? That is a failed poke. Stand aside and let it prove itself again.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top: 1rem;" aria-label="How the setup runs every day">
+    <div class="container ms-wrap">
+      <div class="sec-head">
+        <p class="eyebrow">In practice</p>
+        <h2 style="font-family: var(--font-display); font-weight: 800; font-size: clamp(1.9rem, 4.5vw, 2.8rem); margin: 0;">How it runs, every morning</h2>
+      </div>
+      <div class="ms-trio">
+        <div class="ms-mini"><h3>1 · The scan</h3><p>Before the open, my scanner reads the whole US market and grades every stock against the eight rules. Most days, almost everything fails. That is the point.</p></div>
+        <div class="ms-mini"><h3>2 · The list</h3><p>Names that trigger join the Market Brief list on the <a href="../watchlists/">Watchlists page</a> the same morning, and their charts land on <a href="../chart-of-the-day/">Chart of the Day</a>.</p></div>
+        <div class="ms-mini"><h3>3 · The exits</h3><p>Entries are only half a system. My exits are mechanical — a stop, a target and a 40-trading-day clock — tracked in the open in my <a href="../trade-journal/">Trade Journal</a>.</p></div>
+      </div>
+
+      <div class="ms-note" style="margin-top: 1.6rem;">
+        <h3>The bonus tag: +DIV</h3>
+        <p>Sometimes, inside the pullback of a setup that <strong>already qualifies</strong>, price dips a little lower while RSI quietly turns up. That bullish divergence earns a <strong>+DIV</strong> tag. It never creates a setup by itself — it only decorates one that already earned its place.</p>
+      </div>
+
+      <div class="ms-note" style="margin-top: 1.1rem; background: var(--paper);">
+        <h3>Read this first</h3>
+        <p>The chart at the top is a <strong>drawing of the pattern</strong>, not a real stock and not live data. This page is education — how I look at charts. It is not a recommendation service, and nothing here tells anyone to buy or sell anything. Patterns fail all the time. That is exactly what Rule 7 is for.</p>
+      </div>
+    </div>
+  </section>
+
+  <script>
+  (function () {
+    var NS = "http://www.w3.org/2000/svg";
+    var svg = document.getElementById("ms-svg");
+    if (!svg) return;
+
+    // ---- Drawn example data (illustration, not a real stock) ----
+    var L0 = 52.0, SLOPE = -0.1146, LBAR = 8; // resistance line
+    function lineAt(b) { return L0 + SLOPE * (b - LBAR); }
+    var gaps = [null,null,null,null,null,null,null,null,null,null,
+      1.3,0.7,0.25,1.0,1.5,0.8,1.3,0.6,1.1,1.5, 0.7,0.3,1.2,0.8,1.4,0.6,1.0,1.3,0.5,0.9,
+      0.25,1.1,0.7,1.2,0.5,0.9,1.3,0.6,1.0,0.3, 0.8,1.1,0.6,0.45,0.55,0.5];
+    var closes = [44.0,45.3,46.2,47.1,48.0,48.8,49.6,50.2,50.8,51.2];
+    for (var b = 10; b <= 45; b++) closes.push(+(lineAt(b) - gaps[b]).toFixed(2));
+    [47.9,48.6,48.2,49.2,50.3,51.1,51.7,52.8,53.6,54.5,55.4,56.3].forEach(function (c) { closes.push(c); });
+    var N = closes.length; // 58
+    var TOUCH = { 12: 1, 22: 1, 31: 1, 40: 1 };
+    var POKE = 44;
+    var candles = [], prev = 43.4;
+    for (var i = 0; i < N; i++) {
+      var c = closes[i], o = prev;
+      var h = Math.max(o, c) + 0.35 + ((i * 37) % 10) / 22;
+      var l = Math.min(o, c) - 0.4 - ((i * 53) % 10) / 26;
+      if (i >= 10 && i <= 45) { var fl = 43.9 + 0.055 * (i - 10); if (l < fl) l = fl; if (TOUCH[i]) h = lineAt(i) + 0.06; }
+      if (i === POKE) h = lineAt(i) + 0.85;
+      if (i >= 46) h = Math.max(o, c) + 0.4;
+      var v;
+      if (i < 10) v = 0.5 + ((i * 29) % 10) / 40;
+      else if (i <= 45) v = Math.max(0.14, 0.55 - (i - 10) * 0.011) + (TOUCH[i] ? 0.09 : 0) + ((i * 31) % 10) / 90;
+      else v = 0.55 + (i - 46) * 0.037;
+      candles.push({ o: o, h: h, l: l, c: c, v: Math.min(v, 0.98) });
+      prev = c;
+    }
+    function sma(n, b) { if (b < n - 1) return null; var s = 0; for (var k = b - n + 1; k <= b; k++) s += closes[k]; return s / n; }
+    function sma200(b) { return 43.2 + 0.052 * b; }
+    function rsi(b) {
+      if (b < 10) return 56 + 5 * Math.sin(b * 0.5);
+      if (b <= 45) return 47.5 + 6 * Math.sin(b * 0.55);
+      return 56 + (b - 46) * 1.1;
+    }
+
+    // ---- Scales ----
+    var X0 = 64, X1 = 896, PT = 46, PB = 356, PMIN = 40, PMAX = 58;
+    var VT = 384, VB = 442, RT = 478, RB = 540;
+    function X(b) { return X0 + (X1 - X0) * b / (N - 1); }
+    function Y(p) { return PT + (PMAX - p) / (PMAX - PMIN) * (PB - PT); }
+    function YV(v) { return VB - v * (VB - VT); }
+    function YR(r) { return RT + (70 - r) / (70 - 30) * (RB - RT); }
+    function el(name, attrs, parent) {
+      var e = document.createElementNS(NS, name);
+      for (var k in attrs) e.setAttribute(k, attrs[k]);
+      (parent || svg).appendChild(e); return e;
+    }
+    function grp(cls, parent) { var g = el("g", { "class": "grp " + cls }, parent); return g; }
+    function pathFrom(pts) { return pts.map(function (p, i) { return (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" "); }
+
+    // Frame: panel separators + panel labels
+    el("line", { x1: X0 - 14, y1: 368, x2: X1 + 6, y2: 368, stroke: "#16130F", "stroke-opacity": 0.15 });
+    el("line", { x1: X0 - 14, y1: 460, x2: X1 + 6, y2: 460, stroke: "#16130F", "stroke-opacity": 0.15 });
+    var t;
+    t = el("text", { x: X0 - 16, y: PT + 4, "text-anchor": "end", "class": "lbl", fill: "#7D766A" }); t.textContent = "$";
+    t = el("text", { x: X0 - 16, y: VT + 10, "text-anchor": "end", "class": "lbl", fill: "#7D766A" }); t.textContent = "VOL";
+    t = el("text", { x: X0 - 16, y: RT + 10, "text-anchor": "end", "class": "lbl", fill: "#7D766A" }); t.textContent = "RSI";
+
+    // RSI band 40-55 (squeeze group)
+    var gBand = grp("g-rsi");
+    el("rect", { x: X0, y: YR(55), width: X1 - X0, height: YR(40) - YR(55), fill: "#FFC700", "fill-opacity": 0.18 }, gBand);
+    t = el("text", { x: X1 - 4, y: YR(55) - 6, "text-anchor": "end", "class": "lbl", fill: "#4A443A" }, gBand); t.textContent = "RSI 40–55";
+
+    // 200-day line (step 1)
+    var g200 = grp("g-200");
+    var pts200 = []; for (var i2 = 0; i2 < N; i2++) pts200.push([X(i2), Y(sma200(i2))]);
+    el("path", { d: pathFrom(pts200), fill: "none", stroke: "#7B2FF7", "stroke-width": 2.5 }, g200);
+    t = el("text", { x: X(2), y: Y(sma200(2)) + 20, "class": "lbl", fill: "#7B2FF7" }, g200); t.textContent = "200-DAY";
+
+    // Volume bars
+    var gVol = grp("g-vol");
+    candles.forEach(function (cd, i3) {
+      el("rect", { x: X(i3) - 4, y: YV(cd.v), width: 8, height: VB - YV(cd.v), fill: cd.c >= cd.o ? "#1a9850" : "#d64541", "fill-opacity": 0.75, "class": "volbar" }, gVol);
+    });
+
+    // RSI line
+    var gRsi = grp("g-rsiline");
+    var ptsR = []; for (var i4 = 0; i4 < N; i4++) ptsR.push([X(i4), YR(rsi(i4))]);
+    el("path", { d: pathFrom(ptsR), fill: "none", stroke: "#16130F", "stroke-width": 1.8 }, gRsi);
+
+    // Candles
+    var gCand = grp("g-cand");
+    candles.forEach(function (cd, i5) {
+      var up = cd.c >= cd.o, col = up ? "#1a9850" : "#d64541";
+      var g = el("g", { "class": "candle" + (i5 >= 46 ? " brk" : "") + (i5 === POKE ? " poke" : "") }, gCand);
+      el("line", { x1: X(i5), y1: Y(cd.h), x2: X(i5), y2: Y(cd.l), stroke: col, "stroke-width": 1.6 }, g);
+      var y1 = Y(Math.max(cd.o, cd.c)), y2 = Y(Math.min(cd.o, cd.c));
+      el("rect", { x: X(i5) - 4.5, y: y1, width: 9, height: Math.max(2, y2 - y1), fill: col, stroke: "#16130F", "stroke-width": 0.5 }, g);
+    });
+
+    // SMA pinch lines (squeeze group)
+    var gPinch = grp("g-pinch");
+    [6, 21].forEach(function (n, idx) {
+      var pts = [];
+      for (var i6 = 0; i6 < N; i6++) { var s = sma(n, i6); if (s !== null) pts.push([X(i6), Y(s)]); }
+      el("path", { d: pathFrom(pts), fill: "none", stroke: idx ? "#00BFA6" : "#FF5A1F", "stroke-width": 1.8, "stroke-dasharray": idx ? "5 3" : "none" }, gPinch);
+    });
+    t = el("text", { x: X(33), y: Y(50.6), "class": "lbl", fill: "#4A443A" }, gPinch); t.textContent = "6 / 21 PINCH";
+
+    // Resistance line + touches (coil group)
+    var gCoil = grp("g-coil");
+    var res = el("path", { d: pathFrom([[X(8), Y(lineAt(8))], [X(51), Y(lineAt(51))]]), fill: "none", stroke: "#2447FF", "stroke-width": 2.6 }, gCoil);
+    t = el("text", { x: X(8) + 2, y: Y(lineAt(8)) - 10, "class": "lbl", fill: "#2447FF" }, gCoil); t.textContent = "RESISTANCE";
+    Object.keys(TOUCH).forEach(function (kb, n2) {
+      var bb = +kb;
+      var ring = el("circle", { cx: X(bb), cy: Y(lineAt(bb)), r: 9, fill: "none", stroke: "#2447FF", "stroke-width": 2, "class": "touchring" }, gCoil);
+      el("circle", { cx: X(bb), cy: Y(lineAt(bb)), r: 3.4, fill: "#2447FF" }, gCoil);
+      var tt = el("text", { x: X(bb), y: Y(lineAt(bb)) - 16, "text-anchor": "middle", "class": "lbl", fill: "#2447FF" }, gCoil);
+      tt.textContent = "TOUCH " + (n2 + 1);
+    });
+
+    // Poke marker (trap group)
+    var gPoke = grp("g-poke");
+    el("circle", { cx: X(POKE), cy: Y(lineAt(POKE) + 0.85), r: 11, fill: "none", stroke: "#FF5A1F", "stroke-width": 2.5 }, gPoke);
+    t = el("text", { x: X(POKE), y: Y(lineAt(POKE) + 0.85) - 20, "text-anchor": "middle", "class": "lbl", fill: "#FF5A1F" }, gPoke); t.textContent = "POKE!";
+
+    // Fail path (kill-switch group)
+    var gFail = grp("g-fail");
+    var failPts = [[X(45), Y(closes[45])], [X(48), Y(46.3)], [X(51), Y(45.5)], [X(54), Y(44.5)], [X(57), Y(43.4)]];
+    el("path", { d: pathFrom(failPts), fill: "none", stroke: "#d64541", "stroke-width": 2.6, "stroke-dasharray": "7 5" }, gFail);
+    t = el("text", { x: X(57) - 4, y: Y(43.4) + 22, "text-anchor": "end", "class": "lbl", fill: "#d64541" }, gFail); t.textContent = "✗ UNDER THE 200-DAY";
+
+    // ---- Steps ----
+    var STEPS = [
+      { k: "Step 1 of 6", t: "Start with the ground", p: "Price has to live above a flat or rising 200-day average. That line is the ground the whole pattern stands on. Under it, there is no setup — I do not even look." },
+      { k: "Step 2 of 6", t: "The coil forms", p: "A resistance line slopes down over the price. Over six to ten weeks the price knocks on it again and again — touch, touch, touch — and gets a little closer every time. Sideways, tight, boring. Boring is good." },
+      { k: "Step 3 of 6", t: "The squeeze", p: "While the coil tightens, everything compresses: volume dries up, RSI cools into the 40–55 band, and the fast 6-day average pinches into the 21-day. Stored energy, waiting." },
+      { k: "Step 4 of 6", t: "First, the trap", p: "See that poke above the line? Price jumped over it during the day — then closed back underneath. Rule 8: that is a failed poke, not a trigger. Stand aside and make it prove itself again." },
+      { k: "Step 5 of 6", t: "The trigger", p: "Now the real thing: a daily candle CLOSES above the line, and the next dip holds above it. Rule 6 is satisfied. The setup has fired — this is the moment the pattern exists for." },
+      { k: "Step 6 of 6", t: "And if it fails — the kill switch", p: "The dashed line is the other ending. If price ever closes below the 200-day average, the setup is dead, full stop — Rule 7. No hoping, no averaging down. The pattern only works because the exits are ruthless." }
+    ];
+    var step = 1, timer = null;
+    var dotsWrap = document.getElementById("ms-dots");
+    var dots = [];
+    STEPS.forEach(function (s, i7) {
+      var d = document.createElement("button");
+      d.type = "button"; d.className = "ms-dot"; d.textContent = String(i7 + 1);
+      d.setAttribute("aria-label", "Go to step " + (i7 + 1));
+      d.addEventListener("click", function () { stop(); go(i7 + 1); });
+      dotsWrap.appendChild(d); dots.push(d);
+    });
+    function setOp(sel, v) { var n = svg.querySelector(sel); if (n) n.style.opacity = v; }
+    function go(n) {
+      step = Math.max(1, Math.min(6, n));
+      setOp(".g-200", 1);
+      setOp(".g-coil", step >= 2 ? 1 : 0.08);
+      setOp(".g-pinch", step >= 3 ? 1 : 0);
+      setOp(".g-rsi", step >= 3 ? 1 : 0.25);
+      setOp(".g-poke", step === 4 ? 1 : 0);
+      setOp(".g-fail", step >= 6 ? 1 : 0);
+      svg.querySelectorAll(".candle.brk").forEach(function (c) { c.style.opacity = step >= 5 ? 1 : 0.35; });
+      svg.querySelectorAll(".candle").forEach(function (c) { if (c.classList.contains("poke")) c.style.opacity = step === 4 ? 1 : (step >= 2 ? 0.9 : 1); });
+      res.style.stroke = step >= 5 ? "#1a9850" : "#2447FF";
+      document.getElementById("stamp-trig").classList.toggle("on", step === 5);
+      document.getElementById("stamp-dead").classList.toggle("on", step === 6);
+      var s = STEPS[step - 1];
+      document.getElementById("ms-step-k").textContent = s.k;
+      document.getElementById("ms-step-t").textContent = s.t;
+      document.getElementById("ms-step-p").textContent = s.p;
+      dots.forEach(function (d, i8) { d.classList.toggle("on", i8 === step - 1); });
+      document.getElementById("ms-prev").disabled = step === 1;
+      document.getElementById("ms-next").disabled = step === 6;
+    }
+    function stop() {
+      if (timer) { clearInterval(timer); timer = null; }
+      document.getElementById("ms-play").textContent = "▶ Play the pattern";
+    }
+    document.getElementById("ms-prev").addEventListener("click", function () { stop(); go(step - 1); });
+    document.getElementById("ms-next").addEventListener("click", function () { stop(); go(step + 1); });
+    document.getElementById("ms-play").addEventListener("click", function () {
+      if (timer) { stop(); return; }
+      if (step === 6) go(1);
+      document.getElementById("ms-play").textContent = "❚❚ Pause";
+      timer = setInterval(function () {
+        if (step >= 6) { stop(); return; }
+        go(step + 1);
+      }, 3000);
+    });
+    go(1);
+  })();
+  </script>
+</main>
+{% endblock %}

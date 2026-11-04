@@ -1,0 +1,145 @@
+{% set root = "../" %}
+{% set toTop = "#main" %}
+{% extends "base.njk" %}
+
+{% block head %}
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Chart of the Day — Aslam</title>
+  <meta name="description" content="Every weekday morning Aslam's scanner reads the whole US market and draws charts for its three highest-priority Magic Setup names. This page publishes them — newest first, with the archive. Education only.">
+  <link rel="canonical" href="https://iamaslam.com/chart-of-the-day/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Aslam">
+  <meta property="og:title" content="Chart of the Day — Aslam">
+  <meta property="og:description" content="The three charts my morning market scan drew today — and every day before it.">
+  <meta property="og:url" content="https://iamaslam.com/chart-of-the-day/">
+  <meta name="theme-color" content="#FFFCF7">
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter+Tight:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@300..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .cd-wrap { max-width: 1060px; margin: 0 auto; }
+    .cd-title { font-family: var(--font-display); font-weight: 800; font-size: clamp(2.5rem, 6.5vw, 4.4rem); line-height: 0.98; letter-spacing: -0.01em; margin: 0 0 1.1rem; }
+    .cd-title .mark { background: var(--sun); padding: 0 0.12em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+    .cd-date { font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; color: var(--ink-45); margin: 0 0 1.2rem; }
+    .cd-grid { display: grid; grid-template-columns: 1fr; gap: 1.6rem; }
+    .cd-card { background: #fff; border: 2px solid var(--ink); box-shadow: var(--shadow); padding: 1rem; }
+    .cd-card a.img { display: block; border: 2px solid var(--ink); line-height: 0; }
+    .cd-card img { width: 100%; height: auto; }
+    .cd-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 0.9rem; padding-top: 0.9rem; }
+    .cd-ticker { font-family: var(--font-display); font-weight: 800; font-size: 1.7rem; line-height: 1; }
+    .cd-verdict { font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; border: 2px solid var(--ink); padding: 0.25rem 0.55rem; background: var(--lime); }
+    .cd-verdict.watch { background: var(--paper); }
+    .cd-verdict.magic { background: var(--sun-soft); }
+    .cd-stats { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-70); width: 100%; }
+    .cd-stats strong { color: var(--ink); }
+    .cd-day { margin-bottom: 2.6rem; }
+    .cd-day h3 { font-family: var(--font-display); font-weight: 800; font-size: 1.35rem; margin: 0 0 1rem; }
+    .cd-day h3 .dow { color: var(--ink-45); font-size: 1rem; font-weight: 700; }
+    .cd-thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.1rem; }
+    @media (max-width: 700px) { .cd-thumbs { grid-template-columns: 1fr; } }
+    .cd-thumb { background: #fff; border: 2px solid var(--ink); box-shadow: var(--shadow-sm); padding: 0.6rem; }
+    .cd-thumb a.img { display: block; border: 2px solid var(--ink); line-height: 0; }
+    .cd-thumb img { width: 100%; height: auto; }
+    .cd-thumb .cd-meta { padding-top: 0.6rem; }
+    .cd-thumb .cd-ticker { font-size: 1.15rem; }
+    .cd-status { font-family: var(--font-mono); font-size: 0.85rem; color: var(--ink-70); border: 2px dashed var(--ink-45); padding: 1rem 1.1rem; }
+    .cd-note { border: 2px solid var(--ink); background: var(--paper); box-shadow: var(--shadow-sm); padding: 1.05rem 1.15rem; }
+    .cd-note p { margin: 0; line-height: 1.5; color: var(--ink-70); }
+    .cd-note p strong { color: var(--ink); }
+  </style>
+</head>
+{% endblock %}
+
+{% block content %}
+<main id="main">
+  <section class="hero" aria-label="Chart of the Day">
+    <div class="container hero-inner cd-wrap">
+      <p class="hero-pill"><span class="pdot" aria-hidden="true"></span>From the morning scan</p>
+      <h1 class="cd-title">Chart of <span class="mark">the Day</span></h1>
+      <p class="hero-sub">Every weekday before the open, my scanner reads the <strong>whole US market</strong>, grades every stock against my <a href="../magic-setup/">Magic Setup</a> rules, and draws a chart for its three highest-priority names. Those charts land here — newest first, archive underneath.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top: 0;" aria-label="Latest charts">
+    <div class="container cd-wrap">
+      <p class="cd-date" id="cd-latest-date">Loading the latest scan…</p>
+      <div class="cd-grid" id="cd-latest"></div>
+      <p class="cd-status" id="cd-status" hidden></p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top: 1rem;" aria-label="Archive">
+    <div class="container cd-wrap">
+      <div class="sec-head">
+        <p class="eyebrow">The archive</p>
+        <h2 style="font-family: var(--font-display); font-weight: 800; font-size: clamp(1.9rem, 4.5vw, 2.8rem); margin: 0;">Every day before today</h2>
+      </div>
+      <div id="cd-archive"></div>
+
+      <div class="cd-note" style="margin-top: 2.2rem;">
+        <p><strong>What am I looking at?</strong> Each chart shows the price, the descending resistance line of the coil, the 200-day average and RSI — drawn by my market scanner, the same charts my morning brief carries. They are published as education: a record of what the scan saw that morning. They are <strong>not recommendations</strong>, and a chart appearing here is not an instruction to buy or sell anything. The rules behind them live on <a href="../magic-setup/">The Magic Setup</a> page, and triggered names join the <a href="../watchlists/">Market Brief watchlist</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <script>
+  (function () {
+    var latestEl = document.getElementById("cd-latest");
+    var archEl = document.getElementById("cd-archive");
+    var dateEl = document.getElementById("cd-latest-date");
+    var statusEl = document.getElementById("cd-status");
+    function money(v) { return (v === null || v === undefined) ? null : "$" + Number(v).toFixed(2); }
+    function statsLine(c) {
+      var parts = [];
+      if (c.last_close !== undefined && c.last_close !== null) parts.push("Close <strong>" + money(c.last_close) + "</strong>");
+      if (c.trendline_now !== undefined && c.trendline_now !== null) parts.push("Line <strong>" + money(c.trendline_now) + "</strong>");
+      if (c.zones !== undefined && c.zones !== null) parts.push("Zones <strong>" + c.zones + "</strong>");
+      if (c.rsi14 !== undefined && c.rsi14 !== null) parts.push("RSI <strong>" + Math.round(c.rsi14) + "</strong>");
+      if (c.sma200 !== undefined && c.sma200 !== null) parts.push("200-day <strong>" + money(c.sma200) + "</strong>");
+      return parts.join(" · ");
+    }
+    function verdictChip(c) {
+      if (!c.verdict) return "";
+      var cls = c.verdict === "WATCH" ? " watch" : (c.verdict === "MAGIC" ? " magic" : "");
+      return '<span class="cd-verdict' + cls + '">' + c.verdict + "</span>";
+    }
+    function card(c, dayLabel, thumb) {
+      var stats = statsLine(c);
+      return '<article class="' + (thumb ? "cd-thumb" : "cd-card") + '">' +
+        '<a class="img" href="' + c.img + '" target="_blank" rel="noopener">' +
+        '<img src="' + c.img + '" alt="' + c.ticker + ' daily chart — ' + dayLabel + '" loading="lazy"></a>' +
+        '<div class="cd-meta"><span class="cd-ticker">$' + c.ticker + "</span>" + verdictChip(c) +
+        (stats ? '<span class="cd-stats">' + stats + "</span>" : "") +
+        "</div></article>";
+    }
+    function fail(msg) {
+      dateEl.textContent = "";
+      statusEl.hidden = false;
+      statusEl.textContent = msg;
+    }
+    fetch("../cotd/index.json", { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("bad response"); return r.json(); })
+      .then(function (data) {
+        var days = (data && data.days) || [];
+        if (!days.length) { fail("No charts published yet — the next weekday scan will start the collection."); return; }
+        var first = days[0];
+        dateEl.textContent = "Latest — " + first.label;
+        latestEl.innerHTML = first.charts.map(function (c) { return card(c, first.label, false); }).join("");
+        if (days.length > 1) {
+          archEl.innerHTML = days.slice(1).map(function (d) {
+            return '<div class="cd-day"><h3>' + d.label + '</h3><div class="cd-thumbs">' +
+              d.charts.map(function (c) { return card(c, d.label, true); }).join("") + "</div></div>";
+          }).join("");
+        } else {
+          archEl.innerHTML = '<p class="cd-status">The archive starts today — yesterday is still in the making.</p>';
+        }
+      })
+      .catch(function () { fail("The charts could not be loaded just now. The scan still runs every weekday morning — please check back after the open."); });
+  })();
+  </script>
+</main>
+{% endblock %}
