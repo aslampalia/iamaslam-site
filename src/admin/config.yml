@@ -1,6 +1,9 @@
 backend:
-  name: git-gateway
+  name: github
+  repo: aslampalia/iamaslam-site
   branch: main
+  base_url: https://iamaslam.com
+  auth_endpoint: auth
 
 # Shown to visitors of /admin — the site itself is untouched
 site_url: https://iamaslam.com
