@@ -85,7 +85,7 @@
             var t = (d && d.tickers) || [];
             if (!t.length) return;
             empty.style.display = 'none';
-            t.forEach(function (x) {
+            t.slice().reverse().forEach(function (x) {
               var sym = String(x.symbol || '').toUpperCase();
               if (!sym) return;
               var li = document.createElement('li');
