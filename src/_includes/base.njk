@@ -61,5 +61,6 @@
     });
   }
 </script>is
+<script>(function(){try{var d=JSON.stringify({p:location.pathname,r:document.referrer||"",s:window.screen?screen.width:0});if(navigator.sendBeacon){navigator.sendBeacon("/t/collect",new Blob([d],{type:"application/json"}));}else{fetch("/t/collect",{method:"POST",headers:{"Content-Type":"application/json"},body:d,keepalive:true});}}catch(e){}})();</script>
 </body>
 </html>
