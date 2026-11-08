@@ -21,4 +21,9 @@ tickers:
   - symbol: CEG
   - symbol: OKLO
   - symbol: SMR
+  - symbol: NVDA
+  - symbol: GOOGL
+  - symbol: AVGO
+  - symbol: BE
+  - symbol: PANW
 ---
