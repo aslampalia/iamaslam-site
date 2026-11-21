@@ -46,6 +46,18 @@
     .tj-score .hd { font-family: var(--font-display); font-size: 1.05rem; margin-bottom: 0.35rem; }
     .tj-score div { margin: 0.18rem 0; }
     .tj-score .dim { color: var(--ink-70); font-weight: 400; }
+    .tj-dash { background: #fff; border: 2px solid var(--ink); box-shadow: var(--shadow-sm); padding: 0.8rem 0.9rem 0.9rem; margin-bottom: 1rem; }
+    .tj-dash:empty { display: none; }
+    .tj-dash .hd { font-family: var(--font-display); font-weight: 800; font-size: 1.05rem; margin-bottom: 0.55rem; }
+    .tj-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 0.5rem; margin-bottom: 0.7rem; }
+    .tj-tile { border: 2px solid var(--ink); background: var(--paper); padding: 0.45rem 0.55rem; }
+    .tj-tile .k { font-family: var(--font-mono); font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-70); }
+    .tj-tile .v { font-family: var(--font-display); font-weight: 800; font-size: 1.25rem; line-height: 1.1; margin-top: 0.15rem; }
+    .tj-tile .s { font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-70); margin-top: 0.1rem; }
+    .pos { color: #1a9850; } .neg { color: #d64541; }
+    .tj-chart-k { font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-70); margin: 0.65rem 0 0.3rem; }
+    .tj-dash svg { display: block; width: 100%; height: auto; }
+    .tj-legend { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; margin-top: 0.3rem; }
     .tj-entry { background: #fff; border: 2px solid var(--ink); box-shadow: var(--shadow-sm); padding: 0.8rem 0.9rem; margin-bottom: 0.9rem; }
     .tj-row1 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem 0.9rem; }
     .tj-tick { font-family: var(--font-display); font-weight: 800; font-size: 1.45rem; letter-spacing: -0.02em; }
@@ -216,6 +228,7 @@
         </div>
         <div class="tj-stats" id="tj-stats"></div>
         <div class="tj-score" id="tj-score-mine"></div>
+        <div class="tj-dash" id="tj-dash-mine"></div>
         <div id="tj-list"></div>
         <div class="tj-empty" id="tj-empty">No trades logged yet. Your first trade will live here.</div>
         <p class="tj-note" id="tj-mine-note">Your journal is saved in this browser on this device only — nobody else can see it, and nothing is uploaded. Switching devices? Download a backup here, then restore it on the new device.</p>
@@ -226,6 +239,7 @@
           </div>
           <div class="tj-stats" id="tj-aslam-stats"></div>
           <div class="tj-score" id="tj-score"></div>
+          <div class="tj-dash" id="tj-dash"></div>
           <div id="tj-aslam-list"></div>
           <div class="tj-empty" id="tj-aslam-empty">Loading Aslam&rsquo;s journal&hellip;</div>
           <p class="tj-note">Aslam&rsquo;s journal lives on his own server — the same on his phone and his laptop. Everyone can watch it; only Aslam can write in it.</p>
@@ -903,6 +917,118 @@
     return h;
   }
 
+  /* ---------- dashboard: the trades at a glance ---------- */
+  function tradePct(e) {
+    if (isOpt(e) && typeof e.exitPremium === "number" && typeof e.premium === "number" && e.premium > 0)
+      return (e.exitPremium / e.premium - 1) * 100;
+    if (typeof e.exitPrice === "number" && e.entry > 0) return (e.exitPrice / e.entry - 1) * 100;
+    if (e.status === "won") return 8;
+    if (e.status === "lost") return -8;
+    return 0;
+  }
+  function money0(x) { return (x < 0 ? "−$" : "$") + Math.abs(Math.round(x)).toLocaleString("en-US"); }
+  function pct1(x) { return (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(1) + "%"; }
+  function dashHTML(rows) {
+    var h = '<div class="hd">📊 Dashboard — your trades at a glance</div>';
+    if (rows.length === 0) return h + '<div class="tj-legend">No trades yet — your first logged trade starts the dashboard.</div>';
+    var closed = rows.filter(function (e) { return e.status !== "active"; })
+      .slice().sort(function (a, b) { return (a.createdAt || 0) - (b.createdAt || 0); });
+    var open = rows.filter(function (e) { return e.status === "active"; });
+    var risk = 0, riskKnown = false;
+    open.forEach(function (e) {
+      if (isOpt(e) && typeof e.premium === "number" && typeof e.contracts === "number") { risk += e.premium * e.contracts * 100; riskKnown = true; }
+      else if (typeof e.amount === "number") { risk += e.amount; riskKnown = true; }
+    });
+    function tile(k, v, s, cls) {
+      return '<div class="tj-tile"><div class="k">' + k + '</div><div class="v ' + (cls || "") + '">' + v + '</div>' +
+        (s ? '<div class="s">' + s + '</div>' : '') + '</div>';
+    }
+    var openTile = tile("Open trades", String(open.length),
+      riskKnown ? money0(risk) + (open.some(isOpt) ? " max risk / in play" : " in play") : "", "");
+    if (closed.length === 0) {
+      return h + '<div class="tj-tiles">' + openTile + '</div>' +
+        '<div class="tj-legend">No closed trades yet — the charts start with your first finished trade.</div>';
+    }
+    var pcts = closed.map(tradePct);
+    var pnls = closed.map(function (e) { return tradeMetrics(e).pnl; });
+    var winN = pcts.filter(function (p) { return p > 0; }).length;
+    var wonN = closed.filter(function (e) { return e.status === "won"; }).length;
+    var lostN = closed.filter(function (e) { return e.status === "lost"; }).length;
+    var timeN = closed.filter(function (e) { return e.status === "time"; }).length;
+    var totPnl = null, gw = 0, gl = 0;
+    pnls.forEach(function (p) { if (p !== null) { totPnl = (totPnl || 0) + p; if (p > 0) gw += p; else gl -= p; } });
+    var wp = pnls.filter(function (p, i) { return p !== null && pcts[i] > 0; });
+    var lp = pnls.filter(function (p, i) { return p !== null && pcts[i] < 0; });
+    var avgWin = wp.length ? wp.reduce(function (a, b) { return a + b; }, 0) / wp.length : null;
+    var avgLoss = lp.length ? lp.reduce(function (a, b) { return a + b; }, 0) / lp.length : null;
+    var bestI = 0, worstI = 0;
+    pcts.forEach(function (p, i) { if (p > pcts[bestI]) bestI = i; if (p < pcts[worstI]) worstI = i; });
+    h += '<div class="tj-tiles">' +
+      tile("Closed trades", String(closed.length), "won " + wonN + " · lost " + lostN + " · time " + timeN, "") +
+      tile("Win rate", Math.round(winN / closed.length * 100) + "%", winN + " of " + closed.length + " made money", "") +
+      tile("Total P&L", totPnl === null ? "—" : money0(totPnl), totPnl === null ? "no $ sizes logged" : "on trades with a $ size", totPnl === null ? "" : (totPnl >= 0 ? "pos" : "neg")) +
+      tile("Avg win", avgWin === null ? "—" : money0(avgWin), wp.length + " winning trade" + (wp.length === 1 ? "" : "s"), "pos") +
+      tile("Avg loss", avgLoss === null ? "—" : money0(avgLoss), lp.length + " losing trade" + (lp.length === 1 ? "" : "s"), "neg") +
+      (gl > 0 && gw > 0 ? tile("Profit factor", (gw / gl).toFixed(2), "wins $ ÷ losses $", "") : "") +
+      tile("Best trade", pct1(pcts[bestI]), esc(closed[bestI].ticker) + (pnls[bestI] !== null ? " · " + money0(pnls[bestI]) : ""), pcts[bestI] >= 0 ? "pos" : "neg") +
+      (worstI !== bestI ? tile("Worst trade", pct1(pcts[worstI]), esc(closed[worstI].ticker) + (pnls[worstI] !== null ? " · " + money0(pnls[worstI]) : ""), pcts[worstI] >= 0 ? "pos" : "neg") : "") +
+      openTile +
+      '</div>';
+    // Chart 1: wins vs losses split (by exit kind)
+    var W1 = 600, seg = [[wonN, "#1a9850", "Won"], [lostN, "#d64541", "Lost"], [timeN, "#b8860b", "Time"]];
+    var x1 = 0, bars1 = "";
+    seg.forEach(function (s) {
+      if (!s[0]) return;
+      var w = s[0] / closed.length * W1;
+      bars1 += '<rect x="' + x1.toFixed(1) + '" y="0" width="' + Math.max(w - 2, 1).toFixed(1) + '" height="24" fill="' + s[1] + '"/>' +
+        (w > 44 ? '<text x="' + (x1 + w / 2).toFixed(1) + '" y="17" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">' + s[0] + '</text>' : '');
+      x1 += w;
+    });
+    h += '<div class="tj-chart-k">Wins vs losses — ' + closed.length + ' closed trades</div>' +
+      '<svg viewBox="0 0 ' + W1 + ' 24" role="img" aria-label="Wins versus losses">' + bars1 + '</svg>' +
+      '<div class="tj-legend"><span class="pos">■ Won ' + wonN + '</span> · <span class="neg">■ Lost ' + lostN + '</span> · <span style="color:#9a7400">■ Time exits ' + timeN + '</span></div>';
+    // Chart 2: result of each closed trade, %
+    var maxP = 10;
+    pcts.forEach(function (p) { maxP = Math.max(maxP, Math.abs(p)); });
+    var bw = 58, W2 = Math.max(600, closed.length * bw), zeroY = 92, maxH = 62;
+    var bars2 = '<line x1="0" y1="' + zeroY + '" x2="' + W2 + '" y2="' + zeroY + '" stroke="var(--ink)" stroke-width="2"/>';
+    closed.forEach(function (e, i) {
+      var p = pcts[i], bh = Math.max(Math.abs(p) / maxP * maxH, 2), cx = i * bw + bw / 2;
+      var y = p >= 0 ? zeroY - bh : zeroY;
+      var col = p > 0 ? "#1a9850" : (p < 0 ? "#d64541" : "#b8860b");
+      bars2 += '<rect x="' + (cx - 15) + '" y="' + y.toFixed(1) + '" width="30" height="' + bh.toFixed(1) + '" fill="' + col + '"/>' +
+        '<text x="' + cx + '" y="' + (p >= 0 ? (y - 6).toFixed(1) : (y + bh + 16).toFixed(1)) + '" text-anchor="middle" font-size="12.5" font-weight="700" style="fill:' + col + '">' + pct1(p) + '</text>' +
+        '<text x="' + cx + '" y="' + (zeroY + 34) + '" text-anchor="middle" font-size="12" font-weight="700" style="fill:var(--ink)">' + esc(e.ticker) + '</text>' +
+        (pnls[i] !== null ? '<text x="' + cx + '" y="' + (zeroY + 50) + '" text-anchor="middle" font-size="11" style="fill:var(--ink-70)">' + money0(pnls[i]) + '</text>' : '');
+    });
+    h += '<div class="tj-chart-k">Result of each closed trade — % and $</div>' +
+      '<svg viewBox="0 0 ' + W2 + ' 152" role="img" aria-label="Result per closed trade">' + bars2 + '</svg>';
+    // Chart 3: cumulative P&L in $
+    var cum = [], run = 0, hasCum = false;
+    closed.forEach(function (e, i) { if (pnls[i] !== null) { run += pnls[i]; cum.push({ t: e.ticker, v: run }); hasCum = true; } });
+    if (hasCum) {
+      var W3 = 600, H3 = 150, pad = 26;
+      var lo = Math.min(0, Math.min.apply(null, cum.map(function (c) { return c.v; })));
+      var hi = Math.max(0, Math.max.apply(null, cum.map(function (c) { return c.v; })));
+      if (hi - lo < 10) { hi += 5; lo -= 5; }
+      var X = function (i) { return cum.length === 1 ? W3 / 2 : pad + i * (W3 - 2 * pad) / (cum.length - 1); };
+      var Y = function (v) { return pad + (hi - v) / (hi - lo) * (H3 - 2 * pad); };
+      var pts = cum.map(function (c, i) { return X(i).toFixed(1) + "," + Y(c.v).toFixed(1); }).join(" ");
+      var dots = cum.map(function (c, i) {
+        return '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(c.v).toFixed(1) + '" r="4" fill="' + (c.v >= 0 ? "#1a9850" : "#d64541") + '"/>';
+      }).join("");
+      var lastC = cum[cum.length - 1];
+      h += '<div class="tj-chart-k">Cumulative profit / loss — $ over time</div>' +
+        '<svg viewBox="0 0 ' + W3 + ' ' + H3 + '" role="img" aria-label="Cumulative profit and loss">' +
+        '<line x1="' + pad + '" y1="' + Y(0).toFixed(1) + '" x2="' + (W3 - pad) + '" y2="' + Y(0).toFixed(1) + '" stroke="var(--ink-45)" stroke-width="1.5" stroke-dasharray="5 4"/>' +
+        (cum.length > 1 ? '<polyline points="' + pts + '" fill="none" stroke="var(--ink)" stroke-width="2.5"/>' : '') + dots +
+        '<text x="' + X(cum.length - 1).toFixed(1) + '" y="' + Math.max(Y(lastC.v) - 12, 12).toFixed(1) + '" text-anchor="middle" font-size="14" font-weight="800" style="fill:' + (lastC.v >= 0 ? "#1a9850" : "#d64541") + '">' + money0(lastC.v) + '</text>' +
+        '</svg>';
+    }
+    h += '<div class="tj-legend" style="font-weight:400">How to read it: each bar is one finished trade — green made money, red lost money. Option trades show the option&rsquo;s own % and $; stock trades show the stock&rsquo;s.</div>';
+    return h;
+  }
+
   function renderAll() {
     renderVetoes();
     var mine = unlocked() ? (serverRows || []) : loadLocal();
@@ -918,6 +1044,8 @@
     aslamSec.style.display = unlocked() ? "none" : "block";
     $("tj-score-mine").innerHTML = unlocked() ? (serverRows ? scoreHTML(serverRows) : "") : "";
     $("tj-score").innerHTML = unlocked() ? "" : ((serverRows && !serverError) ? scoreHTML(serverRows) : "");
+    $("tj-dash-mine").innerHTML = unlocked() ? (serverRows ? dashHTML(serverRows) : "") : dashHTML(loadLocal());
+    $("tj-dash").innerHTML = unlocked() ? "" : ((serverRows && !serverError) ? dashHTML(serverRows) : "");
     if (!unlocked()) {
       var aEmpty = $("tj-aslam-empty");
       if (serverError) {
